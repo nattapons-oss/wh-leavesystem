@@ -177,6 +177,7 @@
                                 <th id="thUpType">ประเภท</th>
                                 <th id="thUpStart">เริ่มวันที่</th>
                                 <th id="thUpEnd">ถึงวันที่</th>
+                                <th id="thUpDays">จำนวน (วัน)</th>
                                 <th id="thUpReason" class="admin-only">เหตุผล</th>
                                 <th id="thUpStatus">สถานะ</th>
                                 <th id="thUpAction" class="admin-only">จัดการ (Admin)</th>
@@ -561,7 +562,6 @@
                     localStorage.setItem('leaveData', JSON.stringify(parsedLeaves));
                 }
                 if (data.users) {
-                    // แปลงค่า username/password ให้เป็น String ทั้งหมด ป้องกันประเภทข้อมูลผิดพลาด
                     const parsedUsers = data.users.map(u => ({
                         ...u,
                         username: String(u.username !== undefined && u.username !== null ? u.username : '').trim(),
@@ -650,7 +650,7 @@
             myHistoryTitle: "ประวัติการลาของคุณ", thMyType: "ประเภท", thMyStart: "เริ่มวันที่", thMyEnd: "ถึงวันที่", thMyDays: "จำนวน (วัน)", thMyReason: "เหตุผล", thMyStatus: "สถานะ", thMyActions: "จัดการ",
             profileTitle: "แก้ไขข้อมูลส่วนตัว", lblProfUsername: "ชื่อผู้ใช้", lblProfFullName: "ชื่อ-นามสกุล", lblProfPhone: "เบอร์โทรศัพท์", lblProfDept: "แผนก", btnSaveProfile: "บันทึกการแก้ไข", lblUploadImage: "📷 อัปโหลดรูปโปรไฟล์",
             upcomingTitle: "Dashboard ลางาน", upcomingDesc: "* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดหรือกำลังอยู่ในช่วงลา",
-            thUpImg: "รูป", thUpName: "พนักงาน", thUpType: "ประเภท", thUpStart: "เริ่มวันที่", thUpEnd: "ถึงวันที่", thUpReason: "เหตุผล", thUpStatus: "สถานะ", thUpAction: "จัดการ (Admin)",
+            thUpImg: "รูป", thUpName: "พนักงาน", thUpType: "ประเภท", thUpStart: "เริ่มวันที่", thUpEnd: "ถึงวันที่", thUpDays: "จำนวน (วัน)", thUpReason: "เหตุผล", thUpStatus: "สถานะ", thUpAction: "จัดการ (Admin)",
             dashTitle: "แดชบอร์ดภาพรวม (WH Pantai)", statTotalLeaves: "การลาทั้งหมด", statSickLeaves: "ลาป่วยรวม", statVacation: "ลาพักร้อนรวม",
             tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thAmount: "จำนวน", thReason: "เหตุผล", thStatus: "สถานะ", thAction: "จัดการ (Admin)",
             empFormTitle: "เพิ่มพนักงานใหม่", lblEmpName: "ชื่อ-นามสกุล", lblEmpUser: "Username", lblEmpPhone: "เบอร์โทรศัพท์", lblEmpDept: "แผนก", btnAddEmp: "เพิ่มพนักงาน",
@@ -667,7 +667,7 @@
             myHistoryTitle: "Your Leave History", thMyType: "Type", thMyStart: "Start Date", thMyEnd: "End Date", thMyDays: "Days", thMyReason: "Reason", thMyStatus: "Status", thMyActions: "Action",
             profileTitle: "Edit Profile", lblProfUsername: "Username", lblProfFullName: "Full Name", lblProfPhone: "Phone Number", lblProfDept: "Department", btnSaveProfile: "Save Changes", lblUploadImage: "📷 Upload Photo",
             upcomingTitle: "Leave Dashboard", upcomingDesc: "* Shows active/future leave requests only",
-            thUpImg: "Photo", thUpName: "Employee", thUpType: "Type", thUpStart: "Start Date", thUpEnd: "End Date", thUpReason: "Reason", thUpStatus: "Status", thUpAction: "Action (Admin)",
+            thUpImg: "Photo", thUpName: "Employee", thUpType: "Type", thUpStart: "Start Date", thUpEnd: "End Date", thUpDays: "Days", thUpReason: "Reason", thUpStatus: "Status", thUpAction: "Action (Admin)",
             dashTitle: "WH Pantai Overview Dashboard", statTotalLeaves: "Total Leaves", statSickLeaves: "Total Sick Leave", statVacation: "Total Vacation",
             tableTitle: "All Leave History", thName: "Employee", thType: "Type", thStart: "Start", thEnd: "End", thAmount: "Amount", thReason: "Reason", thStatus: "Status", thAction: "Action (Admin)",
             empFormTitle: "Add New Employee", lblEmpName: "Full Name", lblEmpUser: "Username", lblEmpPhone: "Phone Number", lblEmpDept: "Department", btnAddEmp: "Add Employee",
@@ -684,7 +684,7 @@
             myHistoryTitle: "သင်၏ ခွင့်ယူမှု မှတ်တမ်း", thMyType: "အမျိုးအစား", thMyStart: "စတင်ရက်", thMyEnd: "ပြီးဆုံးရက်", thMyDays: "ရက်ပေါင်း", thMyReason: "အကြောင်းပြချက်", thMyStatus: "အခြေအနေ", thMyActions: "လုပ်ဆောင်ချက်",
             profileTitle: "ကိုယ်ရေးအချက်အလက် ပြင်ရန်", lblProfUsername: "အသုံးပြုသူအမည်", lblProfFullName: "အမည်အပြည့်အစုံ", lblProfPhone: "ဖုန်းနံပါတ်", lblProfDept: "ဌာန", btnSaveProfile: "သိမ်းဆည်းမည်", lblUploadImage: "📷 ဓာတ်ပုံတင်မည်",
             upcomingTitle: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", upcomingDesc: "* လာမည့် သို့မဟုတ် လက်ရှိ ခွင့်ယူထားသည်များကိုသာ ပြသထားသည်",
-            thUpImg: "ပုံ", thUpName: "ဝန်ထမ်း", thUpType: "အမျိုးအစား", thUpStart: "စတင်ရက်", thUpEnd: "ပြီးဆုံးရက်", thUpReason: "အကြောင်းပြချက်", thUpStatus: "အခြေအနေ", thUpAction: "လုပ်ဆောင်ချက် (Admin)",
+            thUpImg: "ပုံ", thUpName: "ဝန်ထမ်း", thUpType: "အမျိုးအစား", thUpStart: "စတင်ရက်", thUpEnd: "ပြီးဆုံးရက်", thUpDays: "ရက်ပေါင်း", thUpReason: "အကြောင်းပြချက်", thUpStatus: "အခြေအနေ", thUpAction: "လုပ်ဆောင်ချက် (Admin)",
             dashTitle: "WH Pantai အထွေထွေ ဒက်ရှ်ဘုတ်", statTotalLeaves: "စုစုပေါင်း ခွင့်ယူမှု", statSickLeaves: "စုစုပေါင်း ဆေးခွင့်", statVacation: "စုစုပေါင်း လုပ်သက်ခွင့်",
             tableTitle: "ခွင့်ယူမှု မှတ်တမ်းအားလုံး", thName: "ဝန်ထမ်း", thType: "အမျိုးအစား", thStart: "စတင်ရက်", thEnd: "ပြီးဆုံးရက်", thAmount: "အရေအတွက်", thReason: "အကြောင်းပြချက်", thStatus: "အခြေအနေ", thAction: "လုပ်ဆောင်ချက် (Admin)",
             empFormTitle: "ဝန်ထမ်းသစ်ထည့်ရန်", lblEmpName: "အမည်အပြည့်အစုံ", lblEmpUser: "Username", lblEmpPhone: "ဖုန်းနံပါတ်", lblEmpDept: "ဌာန", btnAddEmp: "ဝန်ထမ်းထည့်မည်",
@@ -791,7 +791,6 @@
         showAuthPage('loginCard');
     });
 
-    // แก้ไขระบบล็อกอินให้ยืดหยุ่น ป้องกันปัญหาเรื่อง String/Number และ Auto Fetch ล่าสุด
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const u = document.getElementById('loginUsername').value.trim();
@@ -799,13 +798,11 @@
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
 
-        // ฟังก์ชันเปรียบเทียบผู้ใช้ โดยแปลงข้อมูลเป็น String ทั้งหมด และไม่สนตัวพิมพ์เล็ก/ใหญ่ของ Username
         let foundUser = users.find(user => 
             String(user.username || '').trim().toLowerCase() === u.toLowerCase() && 
             String(user.password || '').trim() === p
         );
 
-        // หากยังหาไม่พบ ลองสั่งดึงข้อมูลล่าสุดจาก Cloud ให้อีกครั้งกรณีเปิดหน้าเว็บใหม่
         if (!foundUser && GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) {
             showSyncSpinner(true);
             try {
@@ -1296,10 +1293,11 @@
             const activeLeaves = leaves.filter(leave => parseDateToISO(leave.endDate) >= todayStr);
 
             if(activeLeaves.length === 0) {
-                const colspanVal = (currentUser && currentUser.role === 'admin') ? 8 : 6;
+                const colspanVal = (currentUser && currentUser.role === 'admin') ? 9 : 7;
                 upcomingTbody.innerHTML = `<tr><td colspan="${colspanVal}" class="text-center text-muted p-4">${lang.noLeavesMsg}</td></tr>`;
             } else {
                 activeLeaves.forEach(leave => {
+                    const days = calculateDays(leave.startDate, leave.endDate);
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
                     
                     let statusBadge = (leave.status === 'approved') 
@@ -1324,6 +1322,7 @@
                             <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
                             <td>${formatDateDisplay(leave.startDate)}</td>
                             <td>${formatDateDisplay(leave.endDate)}</td>
+                            <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
                             ${reasonCell}
                             <td>${statusBadge}</td>
                             ${adminActionCell}
