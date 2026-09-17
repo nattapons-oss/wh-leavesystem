@@ -469,6 +469,17 @@
     // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
+    // ฟังก์ชันจัดรูปแบบเบอร์โทรศัพท์ให้อยู่ในรูปแบบ String และมีเลข 0 ด้านหน้าเสมอ
+    function formatPhoneNumber(phone) {
+        if (!phone) return '-';
+        let strPhone = String(phone).trim();
+        // ถ้าเป็นตัวเลข และความยาวไม่เกิน 9 หลัก ให้เติมเลข 0 ด้านหน้า
+        if (strPhone !== '' && !strPhone.startsWith('0') && strPhone.length <= 9) {
+            strPhone = strPhone.padStart(10, '0');
+        }
+        return strPhone;
+    }
+
     function parseDateToISO(dateStr) {
         if (!dateStr) return '';
         let str = String(dateStr).trim();
@@ -525,7 +536,6 @@
 
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                // ปรับแต่ง header เป็น text/plain ป้องกันการบล็อกของเบราว์เซอร์เวลาส่งข้อมูลขนาดใหญ่
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'syncData', leaves, employees, users })
             });
@@ -559,6 +569,8 @@
                             try { e.quota = JSON.parse(e.quota); } catch(err){}
                         }
                         if (!e.quota) e.quota = { sick: 30, personal: 6, vacation: 7 };
+                        // จัดการฟอร์แมตเบอร์โทรศัพท์ตั้งแต่ดึงมาจากคลาวด์
+                        e.phone = formatPhoneNumber(e.phone);
                         return e;
                     });
                     localStorage.setItem('employees', JSON.stringify(parsedEmps));
@@ -742,7 +754,7 @@
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const fullName = document.getElementById('regFullName').value.trim();
-        const phone = document.getElementById('regPhone').value.trim();
+        const phone = formatPhoneNumber(document.getElementById('regPhone').value.trim());
         const dept = document.getElementById('regDept').value.trim();
         const username = document.getElementById('regUsername').value.trim();
         const password = document.getElementById('regPassword').value.trim();
@@ -804,7 +816,7 @@
 
         document.getElementById('profUsername').value = currentUser.username;
         document.getElementById('profFullName').value = currentUser.fullName;
-        document.getElementById('profPhone').value = currentUser.phone || '';
+        document.getElementById('profPhone').value = formatPhoneNumber(currentUser.phone);
         document.getElementById('profDept').value = currentUser.dept;
 
         const adminElements = document.querySelectorAll('.admin-only');
@@ -818,7 +830,6 @@
         switchPage('upcomingView');
     }
 
-    // แก้ไขฟังก์ชันอัปโหลดรูป: เพิ่มการย่อขนาดรูปลง Canvas ก่อนแปลงเป็นโค้ดเพื่อไม่ให้เกิน Limit ของ Sheets
     function previewProfileImage(event) {
         const file = event.target.files[0];
         if (file) {
@@ -827,8 +838,8 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 150; // กำหนดความกว้างสูงสุด
-                    const MAX_HEIGHT = 150; // กำหนดความสูงสูงสุด
+                    const MAX_WIDTH = 150;
+                    const MAX_HEIGHT = 150;
                     let width = img.width;
                     let height = img.height;
 
@@ -849,7 +860,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // บีบอัดเป็นรูป .jpeg ที่คุณภาพ 70% จะช่วยลดขนาดโค้ด Base64 ได้หลายเท่าตัว
                     tempAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById('profAvatarPreview').src = tempAvatarBase64;
                 };
@@ -863,7 +873,7 @@
         e.preventDefault();
         const oldFullName = currentUser.fullName;
         const newFullName = document.getElementById('profFullName').value.trim();
-        const newPhone = document.getElementById('profPhone').value.trim();
+        const newPhone = formatPhoneNumber(document.getElementById('profPhone').value.trim());
         const newDept = document.getElementById('profDept').value.trim();
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
@@ -950,7 +960,7 @@
         emps.push({ 
             id: Date.now(), 
             name: document.getElementById('newEmpName').value.trim(), 
-            phone: document.getElementById('newEmpPhone').value.trim(),
+            phone: formatPhoneNumber(document.getElementById('newEmpPhone').value.trim()), 
             dept: document.getElementById('newEmpDept').value.trim(),
             quota: { sick: 30, personal: 6, vacation: 7 }
         });
@@ -1114,11 +1124,14 @@
                     actionBtnsHtml += `<button class="btn btn-info text-white btn-sm me-1" onclick="editEmployeeQuota(${emp.id})">${lang.setQuotaBtn}</button>`;
                 }
 
+                // เรียกใช้ formatPhoneNumber เพื่อรับประกันว่าจะไม่โดนตัดเลข 0 หน้า
+                const phoneDisplay = formatPhoneNumber(emp.phone);
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="fw-bold">${emp.name}</td>
                         <td>${usernameDisplay}</td>
-                        <td>${emp.phone || '-'}</td>
+                        <td>${phoneDisplay}</td>
                         <td>${quotaDisplay}</td>
                         <td style="width: 130px;">${roleHtml}</td>
                         <td>
