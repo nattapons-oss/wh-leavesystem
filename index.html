@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Padauk', 'Myanmar Text'; }
         .nav-link { cursor: pointer; }
         .page-section { display: none; }
         .page-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
@@ -19,7 +19,9 @@
 
         .brand-logo { max-width: 180px; height: auto; display: block; margin: 0 auto 10px auto; }
         .nav-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+        .table-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
         .profile-avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #6366f1; margin: 0 auto 15px auto; display: block; }
+        .form-user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6; margin: 0 auto 10px auto; display: block; }
 
         .card { border-radius: 15px; border: none; overflow: hidden; }
         .card-header-dashboard { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; }
@@ -45,7 +47,7 @@
             <img src="logo.png" alt="GREAT HILL CO.,LTD. Logo" class="brand-logo mb-2" onerror="this.style.display='none'">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 fw-bold" id="loginTitle">เข้าสู่ระบบ / Login</h4>
-                <button class="btn btn-sm btn-lang" onclick="toggleLanguage()">TH/EN</button>
+                <button class="btn btn-sm btn-lang lang-btn-label" onclick="toggleLanguage()">TH/EN/MM</button>
             </div>
             <p class="mb-0 mt-2 small opacity-75 fw-bold">WH Pantai System</p>
         </div>
@@ -73,7 +75,7 @@
             <img src="logo.png" alt="GREAT HILL CO.,LTD. Logo" class="brand-logo mb-2" onerror="this.style.display='none'">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 fw-bold" id="regTitle">สมัครสมาชิก / Register</h4>
-                <button class="btn btn-sm btn-lang" onclick="toggleLanguage()">TH/EN</button>
+                <button class="btn btn-sm btn-lang lang-btn-label" onclick="toggleLanguage()">TH/EN/MM</button>
             </div>
             <p class="mb-0 mt-2 small opacity-75 fw-bold">WH Pantai (สำหรับพนักงาน)</p>
         </div>
@@ -141,7 +143,7 @@
                 <img id="navAvatar" src="" alt="Avatar" class="nav-avatar">
                 <span class="badge bg-warning text-dark px-3 py-2" id="userRoleBadge">User</span>
                 <span class="text-white small fw-bold" id="currentUserNameDisplay"></span>
-                <button class="btn btn-outline-light btn-sm ms-2" onclick="toggleLanguage()">TH / EN</button>
+                <button class="btn btn-outline-light btn-sm ms-2 lang-btn-label" onclick="toggleLanguage()">TH/EN/MM</button>
                 <button class="btn btn-danger btn-sm" onclick="logout()" id="btnLogout">ออกจากระบบ</button>
             </div>
         </div>
@@ -161,17 +163,19 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <p class="text-muted small mb-3" id="upcomingDesc">* ระบบจะแสดงเฉพาะรายการที่ยังไม่ถึงกำหนดวันลา หรือกำลังอยู่ในช่วงลาเท่านั้น</p>
+                <p class="text-muted small mb-3" id="upcomingDesc">* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดวันลา หรือกำลังอยู่ในช่วงลาเท่านั้น</p>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle table-custom-header">
                         <thead>
                             <tr>
+                                <th style="width: 60px;" id="thUpImg">รูป</th>
                                 <th id="thUpName">พนักงาน</th>
                                 <th id="thUpType">ประเภท</th>
                                 <th id="thUpStart">เริ่มวันที่</th>
                                 <th id="thUpEnd">ถึงวันที่</th>
-                                <th id="thUpReason">เหตุผล</th>
+                                <th id="thUpReason" class="admin-only">เหตุผล</th>
                                 <th id="thUpStatus">สถานะ</th>
+                                <th id="thUpAction" class="admin-only">จัดการ (Admin)</th>
                             </tr>
                         </thead>
                         <tbody id="upcomingTableBody"></tbody>
@@ -189,15 +193,21 @@
                 <span id="editModeBadge" class="badge bg-warning text-dark d-none">กำลังแก้ไขรายการวันลา</span>
             </div>
             <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img id="formUserAvatar" src="" alt="User Avatar" class="form-user-avatar shadow-sm">
+                </div>
+
                 <form id="leaveForm">
                     <input type="hidden" id="editingLeaveId" value="">
+                    
                     <div class="mb-3">
-                        <label class="form-label text-secondary fw-semibold" id="lblSelectEmp">เลือกพนักงาน / Select Employee</label>
-                        <select class="form-select" id="empSelect" required></select>
+                        <label class="form-label text-secondary fw-semibold" id="lblSelectEmp">ผู้ขอลางาน</label>
+                        <input type="text" class="form-control bg-light fw-bold" id="formUserDisplayName" readonly>
                     </div>
+
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label text-secondary fw-semibold" id="lblLeaveType">ประเภท / Type</label>
+                            <label class="form-label text-secondary fw-semibold" id="lblLeaveType">ประเภท</label>
                             <select class="form-select" id="leaveType" required>
                                 <option value="sick" id="optSick">ลาป่วย</option>
                                 <option value="personal" id="optPersonal">ลากิจ</option>
@@ -205,16 +215,16 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label text-secondary fw-semibold" id="lblStartDate">เริ่ม / Start</label>
+                            <label class="form-label text-secondary fw-semibold" id="lblStartDate">เริ่ม</label>
                             <input type="text" class="form-control datepicker" id="startDate" placeholder="วัน/เดือน/ปี" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label text-secondary fw-semibold" id="lblEndDate">สิ้นสุด / End</label>
+                            <label class="form-label text-secondary fw-semibold" id="lblEndDate">สิ้นสุด</label>
                             <input type="text" class="form-control datepicker" id="endDate" placeholder="วัน/เดือน/ปี" required>
                         </div>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label text-secondary fw-semibold" id="lblReason">เหตุผล / Reason</label>
+                        <label class="form-label text-secondary fw-semibold" id="lblReason">เหตุผล</label>
                         <textarea class="form-control" id="reason" rows="3" required></textarea>
                     </div>
                     
@@ -227,14 +237,14 @@
         </div>
     </div>
 
-    <!-- 3.3 หน้าสรุปการลาของฉัน (นำโควต้าออก และดึงข้อมูลตรงตาม User ล็อกอิน) -->
+    <!-- 3.3 หน้าสรุปการลาของฉัน (นำช่องวันลารวมออกเรียบร้อยแล้ว) -->
     <div id="mySummaryView" class="page-section">
         <div class="card shadow-sm mb-4">
             <div class="card-header card-header-summary p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h4 class="mb-0 fw-bold" id="mySummaryTitle">สรุปสถิติการลาของฉัน</h4>
                     <div class="d-flex align-items-center gap-2">
-                        <label class="text-white fw-bold me-1 mb-0"><i class="fa-solid fa-calendar-days"></i> ปี:</label>
+                        <label class="text-white fw-bold me-1 mb-0" id="lblYearText"><i class="fa-solid fa-calendar-days"></i> ปี:</label>
                         <select id="userYearSelect" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="width: 120px;" onchange="loadLeaves()">
                             <option value="2026" selected>2026</option>
                             <option value="2025">2025</option>
@@ -246,28 +256,22 @@
             </div>
             <div class="card-body p-4">
                 <div class="row mb-4">
-                    <div class="col-md-3 mb-2">
-                        <div class="card stat-card bg-primary p-3 shadow-sm text-center">
-                            <h6 id="statMyTotal" class="opacity-75">วันลารวมทั้งหมด</h6>
-                            <h2 class="mb-0 fw-bold"><span id="countMyTotal">0</span> <small class="fs-6">วัน</small></h2>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-4 mb-2">
                         <div class="card stat-card bg-danger p-3 shadow-sm text-center">
-                            <h6 id="statMySick" class="opacity-75">ลาป่วย</h6>
-                            <h2 class="mb-0 fw-bold"><span id="countMySick">0</span> <small class="fs-6">วัน</small></h2>
+                            <h6 id="statMySick" class="opacity-75">ลาป่วย (ใช้ไป/โควต้า)</h6>
+                            <h2 class="mb-0 fw-bold"><span id="countMySick">0</span> <small class="fs-6" id="txtDayUnit2">วัน</small></h2>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-4 mb-2">
                         <div class="card stat-card bg-warning text-dark p-3 shadow-sm text-center">
-                            <h6 id="statMyPersonal" class="opacity-75">ลากิจ</h6>
-                            <h2 class="mb-0 fw-bold"><span id="countMyPersonal">0</span> <small class="fs-6">วัน</small></h2>
+                            <h6 id="statMyPersonal" class="opacity-75">ลากิจ (ใช้ไป/โควต้า)</h6>
+                            <h2 class="mb-0 fw-bold"><span id="countMyPersonal">0</span> <small class="fs-6" id="txtDayUnit3">วัน</small></h2>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-4 mb-2">
                         <div class="card stat-card bg-success p-3 shadow-sm text-center">
-                            <h6 id="statMyVacation" class="opacity-75">ลาพักร้อน</h6>
-                            <h2 class="mb-0 fw-bold"><span id="countMyVacation">0</span> <small class="fs-6">วัน</small></h2>
+                            <h6 id="statMyVacation" class="opacity-75">ลาพักร้อน (ใช้ไป/โควต้า)</h6>
+                            <h2 class="mb-0 fw-bold"><span id="countMyVacation">0</span> <small class="fs-6" id="txtDayUnit4">วัน</small></h2>
                         </div>
                     </div>
                 </div>
@@ -282,6 +286,7 @@
                                 <th id="thMyEnd">ถึงวันที่</th>
                                 <th id="thMyDays">จำนวน (วัน)</th>
                                 <th id="thMyReason">เหตุผล</th>
+                                <th id="thMyStatus">สถานะ</th>
                                 <th id="thMyActions">จัดการ</th>
                             </tr>
                         </thead>
@@ -327,7 +332,7 @@
         </div>
     </div>
 
-    <!-- 3.5 หน้า Dashboard ภาพรวม Admin (เลือกปี + เลือกพนักงานได้) -->
+    <!-- 3.5 หน้า Dashboard ภาพรวม Admin (สามารถกดอนุมัติและแก้ไขวันลาของทุกคนได้) -->
     <div id="dashboardView" class="page-section">
         <div class="card shadow-sm mb-4">
             <div class="card-header card-header-admin p-3">
@@ -335,7 +340,6 @@
                     <h4 class="mb-0 fw-bold" id="dashTitle">แดชบอร์ดภาพรวม (WH Pantai)</h4>
                     <div class="d-flex gap-2">
                         <select id="adminEmpFilter" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="min-width: 180px;" onchange="loadLeaves()">
-                            <!-- รายชื่อพนักงาน -->
                         </select>
                         <select id="adminYearSelect" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="width: 110px;" onchange="loadLeaves()">
                             <option value="ALL">ทุกปี</option>
@@ -348,22 +352,28 @@
             </div>
             <div class="card-body p-4">
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card stat-card bg-primary p-3 shadow-sm text-center">
                             <h5 id="statTotalLeaves" class="opacity-75">การลาทั้งหมด</h5>
-                            <h2 id="countTotal" class="fw-bold mb-0">0 <small class="fs-6">ครั้ง</small></h2>
+                            <h2 id="countTotal" class="fw-bold mb-0">0 <small class="fs-6" id="txtCountUnit">ครั้ง</small></h2>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card stat-card bg-danger p-3 shadow-sm text-center">
-                            <h5 id="statSickLeaves" class="opacity-75">ลาป่วย</h5>
-                            <h2 id="countSick" class="fw-bold mb-0">0 <small class="fs-6">วัน</small></h2>
+                            <h5 id="statSickLeaves" class="opacity-75">ลาป่วย (ใช้/โควต้า)</h5>
+                            <h2 id="countSick" class="fw-bold mb-0">0 <small class="fs-6" id="txtDayUnit5">วัน</small></h2>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-warning text-dark p-3 shadow-sm text-center">
+                            <h5 id="statPersonalLeaves" class="opacity-75">ลากิจ (ใช้/โควต้า)</h5>
+                            <h2 id="countPersonal" class="fw-bold mb-0">0 <small class="fs-6" id="txtDayUnit7">วัน</small></h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="card stat-card bg-success p-3 shadow-sm text-center">
-                            <h5 id="statVacation" class="opacity-75">ลาพักร้อน</h5>
-                            <h2 id="countVacation" class="fw-bold mb-0">0 <small class="fs-6">วัน</small></h2>
+                            <h5 id="statVacation" class="opacity-75">ลาพักร้อน (ใช้/โควต้า)</h5>
+                            <h2 id="countVacation" class="fw-bold mb-0">0 <small class="fs-6" id="txtDayUnit6">วัน</small></h2>
                         </div>
                     </div>
                 </div>
@@ -377,9 +387,10 @@
                                 <th id="thType">ประเภท</th>
                                 <th id="thStart">เริ่ม</th>
                                 <th id="thEnd">สิ้นสุด</th>
-                                <th>จำนวน</th>
+                                <th id="thAmount">จำนวน</th>
                                 <th id="thReason">เหตุผล</th>
-                                <th id="thAction">จัดการ</th>
+                                <th id="thStatus">สถานะ</th>
+                                <th id="thAction">จัดการ (Admin)</th>
                             </tr>
                         </thead>
                         <tbody id="leaveTableBody"></tbody>
@@ -422,17 +433,21 @@
                         <h5 class="mb-0 fw-bold" id="empTableTitle">รายชื่อพนักงาน</h5>
                     </div>
                     <div class="card-body p-4">
-                        <table class="table table-hover align-middle table-custom-header">
-                            <thead>
-                                <tr>
-                                    <th id="thEmpName">ชื่อ</th>
-                                    <th id="thEmpPhone">เบอร์โทรศัพท์</th>
-                                    <th id="thEmpDept">แผนก</th>
-                                    <th id="thEmpAction">ลบ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="empTableBody"></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle table-custom-header">
+                                <thead>
+                                    <tr>
+                                        <th id="thEmpName">ชื่อ</th>
+                                        <th id="thEmpUser">Username</th>
+                                        <th id="thEmpPhone">เบอร์โทรศัพท์</th>
+                                        <th id="thEmpQuota">โควต้าวันลา (ป่วย/กิจ/พักร้อน)</th>
+                                        <th id="thEmpRole">สิทธิ์ใช้งาน</th>
+                                        <th id="thEmpAction">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="empTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -445,6 +460,48 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
+    function playAudioNotification(type) {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+
+            if (type === 'success') {
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+                gain1.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.1);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+                gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.12);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.12);
+                osc2.stop(ctx.currentTime + 0.25);
+            } else if (type === 'error') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, ctx.currentTime);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            }
+        } catch (e) {
+            console.log("Audio Notification Error:", e);
+        }
+    }
+
     const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='%236c757d'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>";
 
     const translations = {
@@ -452,33 +509,52 @@
             loginTitle: "เข้าสู่ระบบ", lblUsername: "ชื่อผู้ใช้", lblPassword: "รหัสผ่าน", btnLogin: "เข้าสู่ระบบ", txtNoAccount: "ยังไม่มีบัญชี?", linkGoRegister: "สมัครสมาชิก",
             regTitle: "สมัครสมาชิกพนักงาน", lblRegFullName: "ชื่อ-นามสกุล", lblRegPhone: "เบอร์โทรศัพท์", lblRegDept: "แผนก", lblRegUser: "ชื่อผู้ใช้", lblRegPass: "รหัสผ่าน", btnRegister: "ลงทะเบียน", txtHaveAccount: "มีบัญชีอยู่แล้ว?", linkGoLogin: "เข้าสู่ระบบ", btnLogout: "ออกจากระบบ",
             navTitle: "ระบบลางาน WH Pantai", menuUpcoming: "Dashboard ลางาน", menuRequest: "ฟอร์มขอลางาน", menuMySummary: "สรุปการลาของฉัน", menuProfile: "แก้ไขโปรไฟล์", menuDashboard: "แดชบอร์ด & ประวัติ", menuEmployee: "จัดการพนักงาน",
-            formTitle: "แบบฟอร์มขอลางาน - WH Pantai", lblSelectEmp: "เลือกพนักงาน", lblLeaveType: "ประเภทการลา", optSick: "ลาป่วย", optPersonal: "ลากิจ", optVacation: "ลาพักร้อน",
+            formTitle: "แบบฟอร์มขอลางาน - WH Pantai", lblSelectEmp: "ผู้ขอลางาน", lblLeaveType: "ประเภทการลา", optSick: "ลาป่วย", optPersonal: "ลากิจ", optVacation: "ลาพักร้อน",
             lblStartDate: "เริ่มวันที่", lblEndDate: "ถึงวันที่", lblReason: "เหตุผล", btnSubmit: "บันทึกการลา",
-            mySummaryTitle: "สรุปสถิติการลาของฉัน", statMyTotal: "วันลารวมทั้งหมด", statMySick: "ลาป่วย", statMyPersonal: "ลากิจ", statMyVacation: "ลาพักร้อน",
-            myHistoryTitle: "ประวัติการลาของคุณ", thMyType: "ประเภท", thMyStart: "เริ่มวันที่", thMyEnd: "ถึงวันที่", thMyDays: "จำนวน (วัน)", thMyReason: "เหตุผล", thMyActions: "จัดการ",
+            mySummaryTitle: "สรุปสถิติการลาของฉัน", statMySick: "ลาป่วย", statMyPersonal: "ลากิจ", statMyVacation: "ลาพักร้อน",
+            myHistoryTitle: "ประวัติการลาของคุณ", thMyType: "ประเภท", thMyStart: "เริ่มวันที่", thMyEnd: "ถึงวันที่", thMyDays: "จำนวน (วัน)", thMyReason: "เหตุผล", thMyStatus: "สถานะ", thMyActions: "จัดการ",
             profileTitle: "แก้ไขข้อมูลส่วนตัว", lblProfUsername: "ชื่อผู้ใช้", lblProfFullName: "ชื่อ-นามสกุล", lblProfPhone: "เบอร์โทรศัพท์", lblProfDept: "แผนก", btnSaveProfile: "บันทึกการแก้ไข", lblUploadImage: "📷 อัปโหลดรูปโปรไฟล์",
             upcomingTitle: "Dashboard ลางาน", upcomingDesc: "* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดหรือกำลังอยู่ในช่วงลา",
-            thUpName: "พนักงาน", thUpType: "ประเภท", thUpStart: "เริ่มวันที่", thUpEnd: "ถึงวันที่", thUpReason: "เหตุผล", thUpStatus: "สถานะ",
+            thUpImg: "รูป", thUpName: "พนักงาน", thUpType: "ประเภท", thUpStart: "เริ่มวันที่", thUpEnd: "ถึงวันที่", thUpReason: "เหตุผล", thUpStatus: "สถานะ", thUpAction: "จัดการ (Admin)",
             dashTitle: "แดชบอร์ดภาพรวม (WH Pantai)", statTotalLeaves: "การลาทั้งหมด", statSickLeaves: "ลาป่วยรวม", statVacation: "ลาพักร้อนรวม",
-            tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thReason: "เหตุผล", thAction: "จัดการ",
-            empFormTitle: "เพิ่มพนักงานใหม่", lblEmpName: "ชื่อ-นามสกุล", lblEmpPhone: "เบอร์โทรศัพท์", lblEmpDept: "แผนก", btnAddEmp: "เพิ่มพนักงาน",
-            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpAction: "ลบ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", selectDefault: "-- กรุณาเลือกพนักงาน --"
+            tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thAmount: "จำนวน", thReason: "เหตุผล", thStatus: "สถานะ", thAction: "จัดการ (Admin)",
+            empFormTitle: "เพิ่มพนักงานใหม่", lblEmpName: "ชื่อ-นามสกุล", lblEmpUser: "Username", lblEmpPhone: "เบอร์โทรศัพท์", lblEmpDept: "แผนก", btnAddEmp: "เพิ่มพนักงาน",
+            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpRole: "สิทธิ์ใช้งาน", thEmpAction: "จัดการ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", resetPassBtn: "🔑 รีเซ็ต", setQuotaBtn: "⚙️ โควต้า", approveBtn: "✅ ออนุมัติ", pendingStatus: "⏳ รออนุมัติ", approvedStatus: "🟢 อนุมัติแล้ว",
+            txtDayUnit: "วัน", txtCountUnit: "ครั้ง", noLeavesMsg: "ไม่มีรายการวันลาที่กำลังจะถึงในขณะนี้", noHistoryMsg: "ไม่พบประวัติการลาในปีนี้"
         },
         en: {
             loginTitle: "Login", lblUsername: "Username", lblPassword: "Password", btnLogin: "Login", txtNoAccount: "Don't have an account?", linkGoRegister: "Register",
             regTitle: "Employee Registration", lblRegFullName: "Full Name", lblRegPhone: "Phone Number", lblRegDept: "Department", lblRegUser: "Username", lblRegPass: "Password", btnRegister: "Sign Up", txtHaveAccount: "Already have an account?", linkGoLogin: "Login", btnLogout: "Logout",
             navTitle: "WH Pantai Leave System", menuUpcoming: "Leave Dashboard", menuRequest: "Leave Form", menuMySummary: "My Summary", menuProfile: "Edit Profile", menuDashboard: "Dashboard & History", menuEmployee: "Employees",
-            formTitle: "Leave Form - WH Pantai", lblSelectEmp: "Select Employee", lblLeaveType: "Leave Type", optSick: "Sick Leave", optPersonal: "Personal Leave", optVacation: "Annual Leave",
+            formTitle: "Leave Form - WH Pantai", lblSelectEmp: "Applicant Name", lblLeaveType: "Leave Type", optSick: "Sick Leave", optPersonal: "Personal Leave", optVacation: "Annual Leave",
             lblStartDate: "Start Date", lblEndDate: "End Date", lblReason: "Reason", btnSubmit: "Submit Leave",
-            mySummaryTitle: "My Leave Summary", statMyTotal: "Total Days", statMySick: "Sick Leave", statMyPersonal: "Personal Leave", statMyVacation: "Annual Leave",
-            myHistoryTitle: "Your Leave History", thMyType: "Type", thMyStart: "Start Date", thMyEnd: "End Date", thMyDays: "Days", thMyReason: "Reason", thMyActions: "Action",
+            mySummaryTitle: "My Leave Summary", statMySick: "Sick Leave", statMyPersonal: "Personal Leave", statMyVacation: "Annual Leave",
+            myHistoryTitle: "Your Leave History", thMyType: "Type", thMyStart: "Start Date", thMyEnd: "End Date", thMyDays: "Days", thMyReason: "Reason", thMyStatus: "Status", thMyActions: "Action",
             profileTitle: "Edit Profile", lblProfUsername: "Username", lblProfFullName: "Full Name", lblProfPhone: "Phone Number", lblProfDept: "Department", btnSaveProfile: "Save Changes", lblUploadImage: "📷 Upload Photo",
             upcomingTitle: "Leave Dashboard", upcomingDesc: "* Shows active/future leave requests only",
-            thUpName: "Employee", thUpType: "Type", thUpStart: "Start Date", thUpEnd: "End Date", thUpReason: "Reason", thUpStatus: "Status",
+            thUpImg: "Photo", thUpName: "Employee", thUpType: "Type", thUpStart: "Start Date", thUpEnd: "End Date", thUpReason: "Reason", thUpStatus: "Status", thUpAction: "Action (Admin)",
             dashTitle: "WH Pantai Overview Dashboard", statTotalLeaves: "Total Leaves", statSickLeaves: "Total Sick Leave", statVacation: "Total Vacation",
-            tableTitle: "All Leave History", thName: "Employee", thType: "Type", thStart: "Start", thEnd: "End", thReason: "Reason", thAction: "Action",
-            empFormTitle: "Add New Employee", lblEmpName: "Full Name", lblEmpPhone: "Phone Number", lblEmpDept: "Department", btnAddEmp: "Add Employee",
-            empTableTitle: "Employee Directory", thEmpName: "Name", thEmpPhone: "Phone", thEmpDept: "Department", thEmpAction: "Action", deleteBtn: "Delete", editBtn: "Edit", cancelBtn: "Cancel", selectDefault: "-- Select Employee --"
+            tableTitle: "All Leave History", thName: "Employee", thType: "Type", thStart: "Start", thEnd: "End", thAmount: "Amount", thReason: "Reason", thStatus: "Status", thAction: "Action (Admin)",
+            empFormTitle: "Add New Employee", lblEmpName: "Full Name", lblEmpUser: "Username", lblEmpPhone: "Phone Number", lblEmpDept: "Department", btnAddEmp: "Add Employee",
+            empTableTitle: "Employee Directory", thEmpName: "Name", thEmpPhone: "Phone", thEmpDept: "Department", thEmpRole: "Role", thEmpAction: "Action", deleteBtn: "Delete", editBtn: "Edit", cancelBtn: "Cancel", resetPassBtn: "🔑 Reset", setQuotaBtn: "⚙️ Quotas", approveBtn: "✅ Approve", pendingStatus: "⏳ Pending", approvedStatus: "🟢 Approved",
+            txtDayUnit: "Days", txtCountUnit: "Times", noLeavesMsg: "No upcoming leave requests found.", noHistoryMsg: "No leave history found for this year."
+        },
+        mm: {
+            loginTitle: "အကောင့်ဝင်ရန်", lblUsername: "အသုံးပြုသူအမည်", lblPassword: "စကားဝှက်", btnLogin: "ဝင်ရောက်မည်", txtNoAccount: "အကောင့်မရှိသေးပါလား?", linkGoRegister: "အကောင့်ဖွင့်ရန်",
+            regTitle: "ဝန်ထမ်းအကောင့်ဖွင့်ရန်", lblRegFullName: "အမည်အပြည့်အစုံ", lblRegPhone: "ဖုန်းနံပါတ်", lblRegDept: "ဌာန", lblRegUser: "အသုံးပြုသူအမည်", lblRegPass: "စကားဝှက်", btnRegister: "စာရင်းသွင်းမည်", txtHaveAccount: "အကောင့်ရှိပြီးသားလား?", linkGoLogin: "အကောင့်ဝင်ရန်", btnLogout: "ထွက်မည်",
+            navTitle: "WH Pantai ခွင့်ယူစနစ်", menuUpcoming: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", menuRequest: "ခွင့်တိုင်ကြားလွှာ", menuMySummary: "ကျွန်ုပ်၏ ခွင့်အကျဉ်း", menuProfile: "ပရိုဖိုင်ပြင်ရန်", menuDashboard: "ဒက်ရှ်ဘုတ်နှင့် မှတ်တမ်း", menuEmployee: "ဝန်ထမ်းများ စီမံရန်",
+            formTitle: "ခွင့်တိုင်ကြားလွှာ - WH Pantai", lblSelectEmp: "ခွင့်တိုင်ကြားသူ", lblLeaveType: "ခွင့်အမျိုးအစား", optSick: "ဆေးခွင့်", optPersonal: "ရှောင်တခင်ခွင့်", optVacation: "လုပ်သက်ခွင့်",
+            lblStartDate: "စတင်သည့်ရက်", lblEndDate: "ပြီးဆုံးသည့်ရက်", lblReason: "အကြောင်းပြချက်", btnSubmit: "ခွင့်တိုင်ကြားမည်",
+            mySummaryTitle: "ကျွန်ုပ်၏ ခွင့်ယူမှု အကျဉ်းချုပ်", statMySick: "ဆေးခွင့်", statMyPersonal: "ရှောင်တခင်ခွင့်", statMyVacation: "လုပ်သက်ခွင့်",
+            myHistoryTitle: "သင်၏ ခွင့်ယူမှု မှတ်တမ်း", thMyType: "အမျိုးအစား", thMyStart: "စတင်ရက်", thMyEnd: "ပြီးဆုံးရက်", thMyDays: "ရက်ပေါင်း", thMyReason: "အကြောင်းပြချက်", thMyStatus: "အခြေအနေ", thMyActions: "လုပ်ဆောင်ချက်",
+            profileTitle: "ကိုယ်ရေးအချက်အလက် ပြင်ရန်", lblProfUsername: "အသုံးပြုသူအမည်", lblProfFullName: "အမည်အပြည့်အစုံ", lblProfPhone: "ဖုန်းနံပါတ်", lblProfDept: "ဌာန", btnSaveProfile: "သိမ်းဆည်းမည်", lblUploadImage: "📷 ဓာတ်ပုံတင်မည်",
+            upcomingTitle: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", upcomingDesc: "* လာမည့် သို့မဟုတ် လက်ရှိ ခွင့်ယူထားသည်များကိုသာ ပြသထားသည်",
+            thUpImg: "ပုံ", thUpName: "ဝန်ထမ်း", thUpType: "အမျိုးအစား", thUpStart: "စတင်ရက်", thUpEnd: "ပြီးဆုံးရက်", thUpReason: "အကြောင်းပြချက်", thUpStatus: "အခြေအနေ", thUpAction: "လုပ်ဆောင်ချက် (Admin)",
+            dashTitle: "WH Pantai အထွေထွေ ဒက်ရှ်ဘုတ်", statTotalLeaves: "စုစုပေါင်း ခွင့်ယူမှု", statSickLeaves: "စုစုပေါင်း ဆေးခွင့်", statVacation: "စုစုပေါင်း လုပ်သက်ခွင့်",
+            tableTitle: "ခွင့်ယူမှု မှတ်တမ်းအားလုံး", thName: "ဝန်ထမ်း", thType: "အမျိုးအစား", thStart: "စတင်ရက်", thEnd: "ပြီးဆုံးရက်", thAmount: "အရေအတွက်", thReason: "အကြောင်းပြချက်", thStatus: "အခြေအနေ", thAction: "လုပ်ဆောင်ချက် (Admin)",
+            empFormTitle: "ဝန်ထမ်းသစ်ထည့်ရန်", lblEmpName: "အမည်အပြည့်အစုံ", lblEmpUser: "Username", lblEmpPhone: "ဖုန်းနံပါတ်", lblEmpDept: "ဌာန", btnAddEmp: "ဝန်ထမ်းထည့်မည်",
+            empTableTitle: "ဝန်ထမ်းစာရင်း", thEmpName: "အမည်", thEmpPhone: "ဖုန်းနံပါတ်", thEmpDept: "ဌာန", thEmpRole: "ရာထူး/စနစ်", thEmpAction: "လုပ်ဆောင်ချက်", deleteBtn: "ဖျက်မည်", editBtn: "ပြင်မည်", cancelBtn: "ပယ်ဖျက်မည်", resetPassBtn: "🔑 စကားဝှက်ပြင်မည်", setQuotaBtn: "⚙️ ခွင့်โควတာ", approveBtn: "✅ အတည်ပြုမည်", pendingStatus: "⏳ စောင့်ဆိုင်းဆဲ", approvedStatus: "🟢 ခွင့်ပြုပြီး",
+            txtDayUnit: "ရက်", txtCountUnit: "ကြိမ်", noLeavesMsg: "လာမည့် ခွင့်ယူမှုများ မရှိသေးပါ", noHistoryMsg: "ဒီနှစ်အတွက် ခွင့်ယူမှု မှတ်တမ်း မရှိသေးပါ"
         }
     };
 
@@ -517,11 +593,22 @@
     }
 
     function toggleLanguage() {
-        currentLang = currentLang === 'th' ? 'en' : 'th';
+        if (currentLang === 'th') currentLang = 'en';
+        else if (currentLang === 'en') currentLang = 'mm';
+        else currentLang = 'th';
+
         const lang = translations[currentLang];
         Object.keys(lang).forEach(key => {
             if(document.getElementById(key)) document.getElementById(key).innerText = lang[key];
         });
+
+        document.querySelectorAll('.lang-btn-label').forEach(btn => {
+            btn.innerText = currentLang.toUpperCase() + ' (TH/EN/MM)';
+        });
+
+        document.querySelectorAll('[id^="txtDayUnit"]').forEach(el => el.innerText = lang.txtDayUnit);
+        if (document.getElementById('txtCountUnit')) document.getElementById('txtCountUnit').innerText = lang.txtCountUnit;
+
         loadEmployees();
         loadLeaves();
     }
@@ -550,7 +637,7 @@
 
             let emps = JSON.parse(localStorage.getItem('employees')) || [];
             if (!emps.some(e => e.name === 'Nattapons (WH Pantai Admin)')) {
-                emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai' });
+                emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai', quota: { sick: 30, personal: 6, vacation: 7 } });
                 localStorage.setItem('employees', JSON.stringify(emps));
             }
         }
@@ -566,7 +653,8 @@
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
         if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-            alert('Username นี้ถูกใช้งานแล้ว');
+            playAudioNotification('error');
+            alert('Username นี้ถูกใช้งานแล้ว / Username already exists');
             return;
         }
 
@@ -574,10 +662,11 @@
         localStorage.setItem('users', JSON.stringify(users));
 
         let emps = JSON.parse(localStorage.getItem('employees')) || [];
-        emps.push({ id: Date.now(), name: fullName, phone: phone, dept: dept });
+        emps.push({ id: Date.now(), name: fullName, phone: phone, dept: dept, quota: { sick: 30, personal: 6, vacation: 7 } });
         localStorage.setItem('employees', JSON.stringify(emps));
 
-        alert('ลงทะเบียนสำเร็จ!');
+        playAudioNotification('success');
+        alert('ลงทะเบียนสำเร็จ! / Registration successful!');
         this.reset();
         loadEmployees();
         showAuthPage('loginCard');
@@ -593,9 +682,11 @@
 
         if (foundUser) {
             currentUser = foundUser;
+            playAudioNotification('success');
             applyRolePermissions();
         } else {
-            alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!');
+            playAudioNotification('error');
+            alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! / Invalid credentials');
         }
     });
 
@@ -611,6 +702,9 @@
         document.getElementById('navAvatar').src = avatarSrc;
         document.getElementById('profAvatarPreview').src = avatarSrc;
 
+        document.getElementById('formUserAvatar').src = avatarSrc;
+        document.getElementById('formUserDisplayName').value = `${currentUser.fullName} (${currentUser.dept || 'WH Pantai'})`;
+
         document.getElementById('profUsername').value = currentUser.username;
         document.getElementById('profFullName').value = currentUser.fullName;
         document.getElementById('profPhone').value = currentUser.phone || '';
@@ -624,14 +718,6 @@
         }
 
         loadEmployees();
-        const select = document.getElementById('empSelect');
-        for (let option of select.options) {
-            if (option.value === currentUser.fullName) {
-                option.selected = true;
-                break;
-            }
-        }
-
         switchPage('upcomingView');
     }
 
@@ -680,8 +766,13 @@
         });
         localStorage.setItem('leaveData', JSON.stringify(leaves));
 
+        const avatarSrc = currentUser.avatar || defaultAvatar;
         document.getElementById('currentUserNameDisplay').innerText = `(${currentUser.fullName})`;
-        document.getElementById('navAvatar').src = currentUser.avatar || defaultAvatar;
+        document.getElementById('navAvatar').src = avatarSrc;
+        document.getElementById('formUserAvatar').src = avatarSrc;
+        document.getElementById('formUserDisplayName').value = `${currentUser.fullName} (${currentUser.dept || 'WH Pantai'})`;
+
+        playAudioNotification('success');
         alert('อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว!');
         
         loadEmployees();
@@ -703,6 +794,7 @@
 
     function switchPage(pageId) {
         if (currentUser.role !== 'admin' && (pageId === 'dashboardView' || pageId === 'employeeView')) {
+            playAudioNotification('error');
             alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
             return;
         }
@@ -711,7 +803,10 @@
         document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
 
         document.getElementById(pageId).classList.add('active');
-        if(pageId === 'upcomingView') document.getElementById('menuUpcoming').classList.add('active');
+        if(pageId === 'upcomingView') {
+            document.getElementById('menuUpcoming').classList.add('active');
+            loadLeaves();
+        }
         if(pageId === 'requestView') document.getElementById('menuRequest').classList.add('active');
         if(pageId === 'mySummaryView') {
             document.getElementById('menuMySummary').classList.add('active');
@@ -729,9 +824,11 @@
             id: Date.now(), 
             name: document.getElementById('newEmpName').value.trim(), 
             phone: document.getElementById('newEmpPhone').value.trim(),
-            dept: document.getElementById('newEmpDept').value.trim() 
+            dept: document.getElementById('newEmpDept').value.trim(),
+            quota: { sick: 30, personal: 6, vacation: 7 }
         });
         localStorage.setItem('employees', JSON.stringify(emps));
+        playAudioNotification('success');
         this.reset();
         loadEmployees();
     });
@@ -739,35 +836,171 @@
     function deleteEmployee(id) {
         let emps = JSON.parse(localStorage.getItem('employees')) || [];
         localStorage.setItem('employees', JSON.stringify(emps.filter(emp => emp.id !== id)));
+        playAudioNotification('success');
         loadEmployees();
+    }
+
+    function changeUserRole(username, newRole) {
+        if (!currentUser || currentUser.role !== 'admin') {
+            playAudioNotification('error');
+            alert('เฉพาะ Admin เท่านั้นที่สามารถเปลี่ยนสิทธิ์ได้ / Admin only');
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let uIdx = users.findIndex(u => u.username === username);
+
+        if (uIdx !== -1) {
+            users[uIdx].role = newRole;
+            localStorage.setItem('users', JSON.stringify(users));
+
+            if (currentUser.username === username) {
+                currentUser.role = newRole;
+                applyRolePermissions();
+            }
+
+            playAudioNotification('success');
+            alert(`เปลี่ยนสิทธิ์ของ ${users[uIdx].fullName} เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว!`);
+            loadEmployees();
+        }
+    }
+
+    function resetUserPassword(username) {
+        if (!currentUser || currentUser.role !== 'admin') {
+            playAudioNotification('error');
+            alert('เฉพาะ Admin เท่านั้นที่สามารถรีเซ็ตรหัสผ่านได้ / Admin only');
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let uIdx = users.findIndex(u => u.username === username);
+
+        if (uIdx !== -1) {
+            const newPassword = prompt(`กรอกรหัสผ่านใหม่สำหรับ Username: "${username}"`, "123456");
+            
+            if (newPassword !== null && newPassword.trim() !== "") {
+                users[uIdx].password = newPassword.trim();
+                localStorage.setItem('users', JSON.stringify(users));
+                playAudioNotification('success');
+                alert(`ตั้งรหัสผ่านใหม่ให้บัญชี "${username}" เรียบร้อยแล้ว!`);
+            }
+        } else {
+            playAudioNotification('error');
+            alert('ไม่พบบัญชีผู้ใช้นี้ในระบบ');
+        }
+    }
+
+    function editEmployeeQuota(empId) {
+        if (!currentUser || currentUser.role !== 'admin') {
+            playAudioNotification('error');
+            alert('เฉพาะ Admin เท่านั้น / Admin only');
+            return;
+        }
+
+        let emps = JSON.parse(localStorage.getItem('employees')) || [];
+        let emp = emps.find(e => e.id === empId);
+
+        if (emp) {
+            const currentQ = emp.quota || { sick: 30, personal: 6, vacation: 7 };
+            const sickStr = prompt(`กำหนดโควต้า "ลาป่วย" (วัน/ปี) สำหรับ ${emp.name}:`, currentQ.sick);
+            if (sickStr === null) return;
+
+            const personalStr = prompt(`กำหนดโควต้า "ลากิจ" (วัน/ปี) สำหรับ ${emp.name}:`, currentQ.personal);
+            if (personalStr === null) return;
+
+            const vacationStr = prompt(`กำหนดโควต้า "ลาพักร้อน" (วัน/ปี) สำหรับ ${emp.name}:`, currentQ.vacation);
+            if (vacationStr === null) return;
+
+            emp.quota = {
+                sick: parseInt(sickStr) || 0,
+                personal: parseInt(personalStr) || 0,
+                vacation: parseInt(vacationStr) || 0
+            };
+
+            localStorage.setItem('employees', JSON.stringify(emps));
+            playAudioNotification('success');
+            alert(`บันทึกโควต้าวันลาของ ${emp.name} เรียบร้อยแล้ว!`);
+            loadEmployees();
+            loadLeaves();
+        }
+    }
+
+    // ฟังก์ชันอนุมัติวันลาโดย Admin
+    function approveLeave(leaveId) {
+        if (!currentUser || currentUser.role !== 'admin') {
+            playAudioNotification('error');
+            alert('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติได้');
+            return;
+        }
+
+        let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+        let idx = leaves.findIndex(l => l.id == leaveId);
+
+        if (idx !== -1) {
+            leaves[idx].status = 'approved';
+            localStorage.setItem('leaveData', JSON.stringify(leaves));
+            playAudioNotification('success');
+            alert('อนุมัติการลาเรียบร้อยแล้ว!');
+            loadLeaves();
+        }
     }
 
     function loadEmployees() {
         let emps = JSON.parse(localStorage.getItem('employees')) || [];
+        let users = JSON.parse(localStorage.getItem('users')) || [];
         const lang = translations[currentLang];
         
         const tbody = document.getElementById('empTableBody');
         if(tbody) {
             tbody.innerHTML = '';
             emps.forEach(emp => {
-                tbody.innerHTML += `<tr><td>${emp.name}</td><td>${emp.phone || '-'}</td><td>${emp.dept}</td><td><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">${lang.deleteBtn}</button></td></tr>`;
-            });
-        }
+                const userAcc = users.find(u => u.fullName.trim() === emp.name.trim());
+                let usernameDisplay = userAcc ? `<span class="badge bg-light text-dark border">${userAcc.username}</span>` : '<span class="text-muted small">ยังไม่มีบัญชี</span>';
+                let roleHtml = '<span class="badge bg-secondary">User</span>';
+                let actionBtnsHtml = '';
 
-        const select = document.getElementById('empSelect');
-        if(select) {
-            const currentVal = select.value;
-            select.innerHTML = `<option value="">${lang.selectDefault}</option>`;
-            emps.forEach(emp => {
-                select.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.dept})</option>`;
+                const q = emp.quota || { sick: 30, personal: 6, vacation: 7 };
+                let quotaDisplay = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">ป่วย ${q.sick}</span> ` +
+                                   `<span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-1">กิจ ${q.personal}</span> ` +
+                                   `<span class="badge bg-success-subtle text-success border border-success-subtle ms-1">พักร้อน ${q.vacation}</span>`;
+
+                if (userAcc) {
+                    if (currentUser && currentUser.role === 'admin') {
+                        roleHtml = `
+                            <select class="form-select form-select-sm" onchange="changeUserRole('${userAcc.username}', this.value)">
+                                <option value="user" ${userAcc.role === 'user' ? 'selected' : ''}>User</option>
+                                <option value="admin" ${userAcc.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>`;
+                        
+                        actionBtnsHtml += `<button class="btn btn-warning btn-sm me-1" onclick="resetUserPassword('${userAcc.username}')">${lang.resetPassBtn}</button>`;
+                    } else {
+                        roleHtml = `<span class="badge bg-${userAcc.role === 'admin' ? 'warning text-dark' : 'secondary'}">${userAcc.role.toUpperCase()}</span>`;
+                    }
+                }
+
+                if (currentUser && currentUser.role === 'admin') {
+                    actionBtnsHtml += `<button class="btn btn-info text-white btn-sm me-1" onclick="editEmployeeQuota(${emp.id})">${lang.setQuotaBtn}</button>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${emp.name}</td>
+                        <td>${usernameDisplay}</td>
+                        <td>${emp.phone || '-'}</td>
+                        <td>${quotaDisplay}</td>
+                        <td style="width: 130px;">${roleHtml}</td>
+                        <td>
+                            ${actionBtnsHtml}
+                            <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">${lang.deleteBtn}</button>
+                        </td>
+                    </tr>`;
             });
-            if(currentVal) select.value = currentVal;
         }
 
         const adminEmpFilter = document.getElementById('adminEmpFilter');
         if(adminEmpFilter) {
             const currentFilter = adminEmpFilter.value;
-            adminEmpFilter.innerHTML = `<option value="ALL">พนักงานทุกคน</option>`;
+            adminEmpFilter.innerHTML = `<option value="ALL">พนักงานทุกคน / All</option>`;
             emps.forEach(emp => {
                 adminEmpFilter.innerHTML += `<option value="${emp.name}">${emp.name}</option>`;
             });
@@ -777,13 +1010,16 @@
 
     document.getElementById('leaveForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const empName = document.getElementById('empSelect').value;
-        if(!empName) { alert("กรุณาเลือกพนักงาน"); return; }
+        const empName = currentUser.fullName;
 
         const startRaw = document.getElementById('startDate').value;
         const endRaw = document.getElementById('endDate').value;
 
-        if(!startRaw || !endRaw) { alert("กรุณาระบุวันที่"); return; }
+        if(!startRaw || !endRaw) { 
+            playAudioNotification('error');
+            alert("กรุณาระบุวันที่"); 
+            return; 
+        }
 
         let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
         const editingId = document.getElementById('editingLeaveId').value;
@@ -797,17 +1033,21 @@
                 leaves[idx].endDate = parseDateToISO(endRaw);
                 leaves[idx].reason = document.getElementById('reason').value;
             }
+            playAudioNotification('success');
             alert('แก้ไขรายการวันลาเรียบร้อยแล้ว!');
         } else {
+            // เมื่อสร้างการลาใหม่ กำหนดสถานะตั้งต้นเป็น 'pending' (รออนุมัติ)
             leaves.push({
                 id: Date.now(),
                 empName: empName,
                 leaveType: document.getElementById('leaveType').value,
                 startDate: parseDateToISO(startRaw),
                 endDate: parseDateToISO(endRaw),
-                reason: document.getElementById('reason').value
+                reason: document.getElementById('reason').value,
+                status: 'pending'
             });
-            alert('บันทึกการลาเรียบร้อย');
+            playAudioNotification('success');
+            alert('บันทึกการลาเรียบร้อย (รอ Admin อนุมัติ)');
         }
 
         localStorage.setItem('leaveData', JSON.stringify(leaves));
@@ -822,7 +1062,6 @@
 
         if (leave) {
             document.getElementById('editingLeaveId').value = leave.id;
-            document.getElementById('empSelect').value = leave.empName;
             document.getElementById('leaveType').value = leave.leaveType;
             
             startPicker.setDate(formatDateDisplay(leave.startDate));
@@ -849,7 +1088,7 @@
         document.getElementById('btnSubmit').innerText = 'บันทึกการลา';
 
         if (currentUser) {
-            document.getElementById('empSelect').value = currentUser.fullName;
+            document.getElementById('formUserDisplayName').value = `${currentUser.fullName} (${currentUser.dept || 'WH Pantai'})`;
         }
     }
 
@@ -857,83 +1096,106 @@
         if (confirm('คุณต้องการยกเลิก/ลบรายการลานี้ใช่หรือไม่?')) {
             let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
             localStorage.setItem('leaveData', JSON.stringify(leaves.filter(leave => leave.id !== id)));
+            playAudioNotification('success');
             loadLeaves();
         }
     }
 
     function loadLeaves() {
         let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let emps = JSON.parse(localStorage.getItem('employees')) || [];
         const lang = translations[currentLang];
         
         const todayStr = new Date().toISOString().split('T')[0];
         const dateDisplayEl = document.getElementById('txtCurrentDateInfo');
         if (dateDisplayEl) dateDisplayEl.innerText = `วันนี้: ${formatDateDisplay(todayStr)}`;
 
-        // 1. Dashboard ลางาน (แสดงเฉพาะ Active/Future Leaves)
+        // 1. Dashboard ลางาน
         const upcomingTbody = document.getElementById('upcomingTableBody');
         if(upcomingTbody) {
             upcomingTbody.innerHTML = '';
             const activeLeaves = leaves.filter(leave => leave.endDate >= todayStr);
 
             if(activeLeaves.length === 0) {
-                upcomingTbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted p-4">ไม่มีรายการวันลาที่กำลังจะถึงในขณะนี้</td></tr>`;
+                const colspanVal = (currentUser && currentUser.role === 'admin') ? 8 : 6;
+                upcomingTbody.innerHTML = `<tr><td colspan="${colspanVal}" class="text-center text-muted p-4">${lang.noLeavesMsg}</td></tr>`;
             } else {
                 activeLeaves.forEach(leave => {
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
-                    let statusBadge = '<span class="badge bg-primary px-3 py-2">กำลังจะถึง</span>';
-                    if (leave.startDate <= todayStr && leave.endDate >= todayStr) {
-                        statusBadge = '<span class="badge bg-danger px-3 py-2">กำลังอยู่ในช่วงลา</span>';
+                    
+                    // แสดงสถานะอนุมัติ / รออนุมัติ
+                    let statusBadge = (leave.status === 'approved') 
+                        ? `<span class="badge bg-success px-3 py-2">${lang.approvedStatus}</span>` 
+                        : `<span class="badge bg-warning text-dark px-3 py-2">${lang.pendingStatus}</span>`;
+
+                    const empUser = users.find(u => u.fullName.trim() === leave.empName.trim());
+                    const empAvatar = (empUser && empUser.avatar) ? empUser.avatar : defaultAvatar;
+
+                    const reasonCell = (currentUser && currentUser.role === 'admin') ? `<td class="admin-only">${leave.reason}</td>` : '';
+                    
+                    let adminActionCell = '';
+                    if (currentUser && currentUser.role === 'admin') {
+                        let approveBtnHtml = (leave.status !== 'approved') ? `<button class="btn btn-success btn-sm me-1" onclick="approveLeave(${leave.id})">${lang.approveBtn}</button>` : '';
+                        adminActionCell = `<td class="admin-only">${approveBtnHtml}<button class="btn btn-warning btn-sm me-1" onclick="startEditLeave(${leave.id})">✏️ ${lang.editBtn}</button><button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">🗑️</button></td>`;
                     }
 
                     upcomingTbody.innerHTML += `
                         <tr>
+                            <td><img src="${empAvatar}" alt="${leave.empName}" class="table-avatar shadow-sm"></td>
                             <td class="fw-bold">${leave.empName}</td>
                             <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
                             <td>${formatDateDisplay(leave.startDate)}</td>
                             <td>${formatDateDisplay(leave.endDate)}</td>
-                            <td>${leave.reason}</td>
+                            ${reasonCell}
                             <td>${statusBadge}</td>
+                            ${adminActionCell}
                         </tr>`;
                 });
             }
         }
 
-        // 2. สรุปข้อมูลสำหรับ User (การลาของฉัน - กรองตรงตามบัญชีผู้ใช้)
+        // 2. สรุปข้อมูลสำหรับ User
         if (currentUser) {
             const selectedUserYear = document.getElementById('userYearSelect').value;
             document.getElementById('mySummaryUserDisplay').innerText = currentUser.fullName;
             
-            // กรองประวัติการลาเฉพาะของ User คนปัจจุบัน + กรองตามปี
+            const myEmp = emps.find(e => e.name.trim() === currentUser.fullName.trim());
+            const userQuota = (myEmp && myEmp.quota) ? myEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+
             const myLeaves = leaves.filter(l => {
                 const leaveYear = l.startDate ? l.startDate.split('-')[0] : '';
                 return (l.empName.trim() === currentUser.fullName.trim()) && (leaveYear === selectedUserYear);
             });
 
             const myHistoryTbody = document.getElementById('myHistoryTableBody');
-            let myTotalDays = 0, mySickDays = 0, myPersonalDays = 0, myVacationDays = 0;
+            let mySickDays = 0, myPersonalDays = 0, myVacationDays = 0;
 
             if (myHistoryTbody) {
                 myHistoryTbody.innerHTML = '';
                 if (myLeaves.length === 0) {
-                    myHistoryTbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted p-4">ไม่พบประวัติการลาในปี ${selectedUserYear}</td></tr>`;
+                    myHistoryTbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted p-4">${lang.noHistoryMsg}</td></tr>`;
                 } else {
                     myLeaves.forEach(leave => {
                         const days = calculateDays(leave.startDate, leave.endDate);
-                        myTotalDays += days;
 
                         if (leave.leaveType === 'sick') mySickDays += days;
                         if (leave.leaveType === 'personal') myPersonalDays += days;
                         if (leave.leaveType === 'vacation') myVacationDays += days;
 
                         let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
+                        let statusBadge = (leave.status === 'approved') 
+                            ? `<span class="badge bg-success px-2 py-1">${lang.approvedStatus}</span>` 
+                            : `<span class="badge bg-warning text-dark px-2 py-1">${lang.pendingStatus}</span>`;
 
                         myHistoryTbody.innerHTML += `
                             <tr>
                                 <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
                                 <td>${formatDateDisplay(leave.startDate)}</td>
                                 <td>${formatDateDisplay(leave.endDate)}</td>
-                                <td class="fw-bold text-primary">${days} วัน</td>
+                                <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
                                 <td>${leave.reason}</td>
+                                <td>${statusBadge}</td>
                                 <td>
                                     <button class="btn btn-warning btn-sm me-1" onclick="startEditLeave(${leave.id})">✏️ ${lang.editBtn}</button>
                                     <button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">🗑️ ${lang.cancelBtn}</button>
@@ -943,13 +1205,12 @@
                 }
             }
 
-            document.getElementById('countMyTotal').innerText = myTotalDays;
-            document.getElementById('countMySick').innerText = mySickDays;
-            document.getElementById('countMyPersonal').innerText = myPersonalDays;
-            document.getElementById('countMyVacation').innerText = myVacationDays;
+            document.getElementById('countMySick').innerText = `${mySickDays} / ${userQuota.sick}`;
+            document.getElementById('countMyPersonal').innerText = `${myPersonalDays} / ${userQuota.personal}`;
+            document.getElementById('countMyVacation').innerText = `${myVacationDays} / ${userQuota.vacation}`;
         }
 
-        // 3. แดชบอร์ดสำหรับ Admin (กรองตามปี + กรองพนักงาน)
+        // 3. แดชบอร์ดภาพรวมสำหรับ Admin
         const leaveTbody = document.getElementById('leaveTableBody');
         if(leaveTbody) {
             leaveTbody.innerHTML = '';
@@ -963,14 +1224,20 @@
                 return matchYear && matchEmp;
             });
 
-            let sickCountDays = 0, vacCountDays = 0;
+            let sickCountDays = 0, personalCountDays = 0, vacCountDays = 0;
 
             filteredAdminLeaves.forEach(leave => {
                 const days = calculateDays(leave.startDate, leave.endDate);
                 if(leave.leaveType === 'sick') sickCountDays += days;
+                if(leave.leaveType === 'personal') personalCountDays += days;
                 if(leave.leaveType === 'vacation') vacCountDays += days;
 
                 let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
+                let statusBadge = (leave.status === 'approved') 
+                    ? `<span class="badge bg-success px-2 py-1">${lang.approvedStatus}</span>` 
+                    : `<span class="badge bg-warning text-dark px-2 py-1">${lang.pendingStatus}</span>`;
+
+                let approveBtnHtml = (leave.status !== 'approved') ? `<button class="btn btn-success btn-sm me-1" onclick="approveLeave(${leave.id})">${lang.approveBtn}</button>` : '';
 
                 leaveTbody.innerHTML += `
                     <tr>
@@ -978,15 +1245,31 @@
                         <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
                         <td>${formatDateDisplay(leave.startDate)}</td>
                         <td>${formatDateDisplay(leave.endDate)}</td>
-                        <td class="fw-bold text-primary">${days} วัน</td>
+                        <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
                         <td>${leave.reason}</td>
-                        <td><button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">${lang.deleteBtn}</button></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${approveBtnHtml}
+                            <button class="btn btn-warning btn-sm me-1" onclick="startEditLeave(${leave.id})">✏️ ${lang.editBtn}</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">${lang.deleteBtn}</button>
+                        </td>
                     </tr>`;
             });
 
             document.getElementById('countTotal').innerText = filteredAdminLeaves.length;
-            document.getElementById('countSick').innerText = sickCountDays;
-            document.getElementById('countVacation').innerText = vacCountDays;
+
+            if (selectedEmpFilter !== 'ALL') {
+                const targetEmp = emps.find(e => e.name === selectedEmpFilter);
+                const targetQ = (targetEmp && targetEmp.quota) ? targetEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+                
+                document.getElementById('countSick').innerText = `${sickCountDays} / ${targetQ.sick}`;
+                document.getElementById('countPersonal').innerText = `${personalCountDays} / ${targetQ.personal}`;
+                document.getElementById('countVacation').innerText = `${vacCountDays} / ${targetQ.vacation}`;
+            } else {
+                document.getElementById('countSick').innerText = `${sickCountDays}`;
+                document.getElementById('countPersonal').innerText = `${personalCountDays}`;
+                document.getElementById('countVacation').innerText = `${vacCountDays}`;
+            }
         }
     }
 
