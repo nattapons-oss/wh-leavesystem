@@ -560,7 +560,20 @@
                     });
                     localStorage.setItem('leaveData', JSON.stringify(parsedLeaves));
                 }
-                if (data.users) localStorage.setItem('users', JSON.stringify(data.users));
+                if (data.users) {
+                    // แปลงค่า username/password ให้เป็น String ทั้งหมด ป้องกันประเภทข้อมูลผิดพลาด
+                    const parsedUsers = data.users.map(u => ({
+                        ...u,
+                        username: String(u.username !== undefined && u.username !== null ? u.username : '').trim(),
+                        password: String(u.password !== undefined && u.password !== null ? u.password : '').trim(),
+                        fullName: String(u.fullName || '').trim(),
+                        phone: formatPhoneNumber(u.phone),
+                        dept: String(u.dept || '').trim(),
+                        role: String(u.role || 'user').trim().toLowerCase(),
+                        avatar: u.avatar || defaultAvatar
+                    }));
+                    localStorage.setItem('users', JSON.stringify(parsedUsers));
+                }
                 if (data.employees) {
                     const parsedEmps = data.employees.map(e => {
                         if (typeof e.quota === 'string' && e.quota !== '') {
@@ -723,10 +736,9 @@
         document.getElementById(pageCardId).classList.remove('d-none');
     }
 
-    // ปรับแก้ไขเพื่อตรวจสอบการมีอยู่ของ Admin อย่างปลอดภัย (ทำงานหลังดึง Cloud Data แล้วเท่านั้น)
     function checkDefaultAdmin() {
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        const adminExists = users.some(u => u.username === 'Nattapons');
+        const adminExists = users.some(u => String(u.username || '').trim().toLowerCase() === 'nattapons');
         
         if (!adminExists) {
             users.push({
@@ -741,7 +753,7 @@
             localStorage.setItem('users', JSON.stringify(users));
 
             let emps = JSON.parse(localStorage.getItem('employees')) || [];
-            if (!emps.some(e => e.name === 'Nattapons (WH Pantai Admin)')) {
+            if (!emps.some(e => String(e.name || '').trim() === 'Nattapons (WH Pantai Admin)')) {
                 emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai', quota: { sick: 30, personal: 6, vacation: 7 } });
                 localStorage.setItem('employees', JSON.stringify(emps));
             }
@@ -758,13 +770,13 @@
         const password = document.getElementById('regPassword').value.trim();
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        if (users.some(u => String(u.username || '').trim().toLowerCase() === username.toLowerCase())) {
             playAudioNotification('error');
             alert('Username นี้ถูกใช้งานแล้ว / Username already exists');
             return;
         }
 
-        users.push({ username, password, fullName, phone, dept, role: 'user', avatar: defaultAvatar });
+        users.push({ username: String(username), password: String(password), fullName, phone, dept, role: 'user', avatar: defaultAvatar });
         localStorage.setItem('users', JSON.stringify(users));
 
         let emps = JSON.parse(localStorage.getItem('employees')) || [];
@@ -779,13 +791,36 @@
         showAuthPage('loginCard');
     });
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    // แก้ไขระบบล็อกอินให้ยืดหยุ่น ป้องกันปัญหาเรื่อง String/Number และ Auto Fetch ล่าสุด
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const u = document.getElementById('loginUsername').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        const foundUser = users.find(user => user.username === u && user.password === p);
+
+        // ฟังก์ชันเปรียบเทียบผู้ใช้ โดยแปลงข้อมูลเป็น String ทั้งหมด และไม่สนตัวพิมพ์เล็ก/ใหญ่ของ Username
+        let foundUser = users.find(user => 
+            String(user.username || '').trim().toLowerCase() === u.toLowerCase() && 
+            String(user.password || '').trim() === p
+        );
+
+        // หากยังหาไม่พบ ลองสั่งดึงข้อมูลล่าสุดจาก Cloud ให้อีกครั้งกรณีเปิดหน้าเว็บใหม่
+        if (!foundUser && GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) {
+            showSyncSpinner(true);
+            try {
+                await fetchCloudData();
+                users = JSON.parse(localStorage.getItem('users')) || [];
+                foundUser = users.find(user => 
+                    String(user.username || '').trim().toLowerCase() === u.toLowerCase() && 
+                    String(user.password || '').trim() === p
+                );
+            } catch (err) {
+                console.error("Login fetch error:", err);
+            } finally {
+                showSyncSpinner(false);
+            }
+        }
 
         if (foundUser) {
             currentUser = foundUser;
@@ -802,7 +837,7 @@
         document.getElementById('mainNav').classList.remove('d-none');
         document.getElementById('mainContent').classList.remove('d-none');
 
-        document.getElementById('userRoleBadge').innerText = currentUser.role.toUpperCase();
+        document.getElementById('userRoleBadge').innerText = String(currentUser.role || 'user').toUpperCase();
         document.getElementById('currentUserNameDisplay').innerText = `(${currentUser.fullName})`;
         
         const avatarSrc = currentUser.avatar || defaultAvatar;
@@ -875,7 +910,7 @@
         const newDept = document.getElementById('profDept').value.trim();
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        let userIndex = users.findIndex(u => u.username === currentUser.username);
+        let userIndex = users.findIndex(u => String(u.username || '').trim().toLowerCase() === String(currentUser.username || '').trim().toLowerCase());
         if (userIndex !== -1) {
             users[userIndex].fullName = newFullName;
             users[userIndex].phone = newPhone;
@@ -985,13 +1020,13 @@
         }
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        let uIdx = users.findIndex(u => u.username === username);
+        let uIdx = users.findIndex(u => String(u.username || '').trim().toLowerCase() === String(username || '').trim().toLowerCase());
 
         if (uIdx !== -1) {
             users[uIdx].role = newRole;
             localStorage.setItem('users', JSON.stringify(users));
 
-            if (currentUser.username === username) {
+            if (String(currentUser.username || '').trim().toLowerCase() === String(username || '').trim().toLowerCase()) {
                 currentUser.role = newRole;
                 applyRolePermissions();
             }
@@ -1011,13 +1046,13 @@
         }
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
-        let uIdx = users.findIndex(u => u.username === username);
+        let uIdx = users.findIndex(u => String(u.username || '').trim().toLowerCase() === String(username || '').trim().toLowerCase());
 
         if (uIdx !== -1) {
             const newPassword = prompt(`กรอกรหัสผ่านใหม่สำหรับ Username: "${username}"`, "123456");
             
             if (newPassword !== null && newPassword.trim() !== "") {
-                users[uIdx].password = newPassword.trim();
+                users[uIdx].password = String(newPassword.trim());
                 localStorage.setItem('users', JSON.stringify(users));
                 syncToCloud();
                 playAudioNotification('success');
@@ -1094,7 +1129,7 @@
         if(tbody) {
             tbody.innerHTML = '';
             emps.forEach(emp => {
-                const userAcc = users.find(u => u.fullName.trim() === emp.name.trim());
+                const userAcc = users.find(u => String(u.fullName || '').trim() === String(emp.name || '').trim());
                 let usernameDisplay = userAcc ? `<span class="badge bg-light text-dark border">${userAcc.username}</span>` : '<span class="text-muted small">ยังไม่มีบัญชี</span>';
                 let roleHtml = '<span class="badge bg-secondary">User</span>';
                 let actionBtnsHtml = '';
@@ -1114,7 +1149,7 @@
                         
                         actionBtnsHtml += `<button class="btn btn-warning btn-sm me-1" onclick="resetUserPassword('${userAcc.username}')">${lang.resetPassBtn}</button>`;
                     } else {
-                        roleHtml = `<span class="badge bg-${userAcc.role === 'admin' ? 'warning text-dark' : 'secondary'}">${userAcc.role.toUpperCase()}</span>`;
+                        roleHtml = `<span class="badge bg-${userAcc.role === 'admin' ? 'warning text-dark' : 'secondary'}">${String(userAcc.role || 'user').toUpperCase()}</span>`;
                     }
                 }
 
@@ -1271,7 +1306,7 @@
                         ? `<span class="badge bg-success px-3 py-2">${lang.approvedStatus}</span>` 
                         : `<span class="badge bg-warning text-dark px-3 py-2">${lang.pendingStatus}</span>`;
 
-                    const empUser = users.find(u => u.fullName.trim() === leave.empName.trim());
+                    const empUser = users.find(u => String(u.fullName || '').trim() === String(leave.empName || '').trim());
                     const empAvatar = (empUser && empUser.avatar) ? empUser.avatar : defaultAvatar;
 
                     const reasonCell = (currentUser && currentUser.role === 'admin') ? `<td class="admin-only">${leave.reason}</td>` : '';
@@ -1302,13 +1337,13 @@
             const selectedUserYear = document.getElementById('userYearSelect').value;
             document.getElementById('mySummaryUserDisplay').innerText = currentUser.fullName;
             
-            const myEmp = emps.find(e => e.name.trim() === currentUser.fullName.trim());
+            const myEmp = emps.find(e => String(e.name || '').trim() === String(currentUser.fullName || '').trim());
             const userQuota = (myEmp && myEmp.quota) ? myEmp.quota : { sick: 30, personal: 6, vacation: 7 };
 
             const myLeaves = leaves.filter(l => {
                 const isoStart = parseDateToISO(l.startDate);
                 const leaveYear = isoStart ? isoStart.split('-')[0] : '';
-                return (l.empName.trim() === currentUser.fullName.trim()) && (leaveYear === selectedUserYear);
+                return (String(l.empName || '').trim() === String(currentUser.fullName || '').trim()) && (leaveYear === selectedUserYear);
             });
 
             const myHistoryTbody = document.getElementById('myHistoryTableBody');
@@ -1417,7 +1452,6 @@
         }
     }
 
-    // เริ่มต้นระบบอย่างปลอดภัย โดยดึงข้อมูล Cloud มาก่อนเสมอ
     async function initApp() {
         await fetchCloudData();
         checkDefaultAdmin();
