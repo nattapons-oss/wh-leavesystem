@@ -36,6 +36,8 @@
 
         .btn-lang { background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(5px); }
         .btn-lang:hover { background: rgba(255, 255, 255, 0.3); color: white; }
+        
+        .sync-spinner { display: none; width: 1rem; height: 1rem; border-width: 0.15em; }
     </style>
 </head>
 <body>
@@ -140,6 +142,8 @@
                 </li>
             </ul>
             <div class="d-flex align-items-center gap-2">
+                <div id="syncIndicator" class="spinner-border text-light sync-spinner" role="status"></div>
+                <button class="btn btn-sm btn-outline-info text-white" onclick="fetchCloudData()"><i class="fa-solid fa-rotate"></i> ดึงข้อมูลใหม่</button>
                 <img id="navAvatar" src="" alt="Avatar" class="nav-avatar">
                 <span class="badge bg-warning text-dark px-3 py-2" id="userRoleBadge">User</span>
                 <span class="text-white small fw-bold" id="currentUserNameDisplay"></span>
@@ -237,7 +241,7 @@
         </div>
     </div>
 
-    <!-- 3.3 หน้าสรุปการลาของฉัน (นำช่องวันลารวมออกเรียบร้อยแล้ว) -->
+    <!-- 3.3 หน้าสรุปการลาของฉัน -->
     <div id="mySummaryView" class="page-section">
         <div class="card shadow-sm mb-4">
             <div class="card-header card-header-summary p-3">
@@ -332,7 +336,7 @@
         </div>
     </div>
 
-    <!-- 3.5 หน้า Dashboard ภาพรวม Admin (สามารถกดอนุมัติและแก้ไขวันลาของทุกคนได้) -->
+    <!-- 3.5 หน้า Dashboard ภาพรวม Admin -->
     <div id="dashboardView" class="page-section">
         <div class="card shadow-sm mb-4">
             <div class="card-header card-header-admin p-3">
@@ -460,6 +464,67 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
+    // ------------------------------------------------------------------
+    // ใส่ Web App URL ของคุณจาก Google Apps Script ในบรรทัดล่างนี้:
+    // ------------------------------------------------------------------
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
+
+    function showSyncSpinner(show) {
+        const spinner = document.getElementById('syncIndicator');
+        if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
+    }
+
+    async function syncToCloud() {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
+        showSyncSpinner(true);
+        try {
+            const leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'syncData', leaves, employees, users })
+            });
+        } catch (e) {
+            console.error("Cloud Sync Error:", e);
+        } finally {
+            showSyncSpinner(false);
+        }
+    }
+
+    async function fetchCloudData() {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
+        showSyncSpinner(true);
+        try {
+            const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitialData`);
+            const data = await res.json();
+
+            if (data) {
+                if (data.leaves) localStorage.setItem('leaveData', JSON.stringify(data.leaves));
+                if (data.users) localStorage.setItem('users', JSON.stringify(data.users));
+                if (data.employees) {
+                    const parsedEmps = data.employees.map(e => {
+                        if (typeof e.quota === 'string' && e.quota !== '') {
+                            try { e.quota = JSON.parse(e.quota); } catch(err){}
+                        }
+                        if (!e.quota) e.quota = { sick: 30, personal: 6, vacation: 7 };
+                        return e;
+                    });
+                    localStorage.setItem('employees', JSON.stringify(parsedEmps));
+                }
+                loadEmployees();
+                loadLeaves();
+            }
+        } catch (e) {
+            console.error("Fetch Cloud Error:", e);
+        } finally {
+            showSyncSpinner(false);
+        }
+    }
+
     function playAudioNotification(type) {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -519,7 +584,7 @@
             dashTitle: "แดชบอร์ดภาพรวม (WH Pantai)", statTotalLeaves: "การลาทั้งหมด", statSickLeaves: "ลาป่วยรวม", statVacation: "ลาพักร้อนรวม",
             tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thAmount: "จำนวน", thReason: "เหตุผล", thStatus: "สถานะ", thAction: "จัดการ (Admin)",
             empFormTitle: "เพิ่มพนักงานใหม่", lblEmpName: "ชื่อ-นามสกุล", lblEmpUser: "Username", lblEmpPhone: "เบอร์โทรศัพท์", lblEmpDept: "แผนก", btnAddEmp: "เพิ่มพนักงาน",
-            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpRole: "สิทธิ์ใช้งาน", thEmpAction: "จัดการ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", resetPassBtn: "🔑 รีเซ็ต", setQuotaBtn: "⚙️ โควต้า", approveBtn: "✅ ออนุมัติ", pendingStatus: "⏳ รออนุมัติ", approvedStatus: "🟢 อนุมัติแล้ว",
+            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpRole: "สิทธิ์ใช้งาน", thEmpAction: "จัดการ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", resetPassBtn: "🔑 รีเซ็ต", setQuotaBtn: "⚙️ โควต้า", approveBtn: "✅ อนุมัติ", pendingStatus: "⏳ รออนุมัติ", approvedStatus: "🟢 อนุมัติแล้ว",
             txtDayUnit: "วัน", txtCountUnit: "ครั้ง", noLeavesMsg: "ไม่มีรายการวันลาที่กำลังจะถึงในขณะนี้", noHistoryMsg: "ไม่พบประวัติการลาในปีนี้"
         },
         en: {
@@ -640,6 +705,7 @@
                 emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai', quota: { sick: 30, personal: 6, vacation: 7 } });
                 localStorage.setItem('employees', JSON.stringify(emps));
             }
+            syncToCloud();
         }
     }
 
@@ -665,6 +731,7 @@
         emps.push({ id: Date.now(), name: fullName, phone: phone, dept: dept, quota: { sick: 30, personal: 6, vacation: 7 } });
         localStorage.setItem('employees', JSON.stringify(emps));
 
+        syncToCloud();
         playAudioNotification('success');
         alert('ลงทะเบียนสำเร็จ! / Registration successful!');
         this.reset();
@@ -766,6 +833,7 @@
         });
         localStorage.setItem('leaveData', JSON.stringify(leaves));
 
+        syncToCloud();
         const avatarSrc = currentUser.avatar || defaultAvatar;
         document.getElementById('currentUserNameDisplay').innerText = `(${currentUser.fullName})`;
         document.getElementById('navAvatar').src = avatarSrc;
@@ -828,6 +896,7 @@
             quota: { sick: 30, personal: 6, vacation: 7 }
         });
         localStorage.setItem('employees', JSON.stringify(emps));
+        syncToCloud();
         playAudioNotification('success');
         this.reset();
         loadEmployees();
@@ -836,6 +905,7 @@
     function deleteEmployee(id) {
         let emps = JSON.parse(localStorage.getItem('employees')) || [];
         localStorage.setItem('employees', JSON.stringify(emps.filter(emp => emp.id !== id)));
+        syncToCloud();
         playAudioNotification('success');
         loadEmployees();
     }
@@ -859,6 +929,7 @@
                 applyRolePermissions();
             }
 
+            syncToCloud();
             playAudioNotification('success');
             alert(`เปลี่ยนสิทธิ์ของ ${users[uIdx].fullName} เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว!`);
             loadEmployees();
@@ -881,6 +952,7 @@
             if (newPassword !== null && newPassword.trim() !== "") {
                 users[uIdx].password = newPassword.trim();
                 localStorage.setItem('users', JSON.stringify(users));
+                syncToCloud();
                 playAudioNotification('success');
                 alert(`ตั้งรหัสผ่านใหม่ให้บัญชี "${username}" เรียบร้อยแล้ว!`);
             }
@@ -918,6 +990,7 @@
             };
 
             localStorage.setItem('employees', JSON.stringify(emps));
+            syncToCloud();
             playAudioNotification('success');
             alert(`บันทึกโควต้าวันลาของ ${emp.name} เรียบร้อยแล้ว!`);
             loadEmployees();
@@ -925,7 +998,6 @@
         }
     }
 
-    // ฟังก์ชันอนุมัติวันลาโดย Admin
     function approveLeave(leaveId) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
@@ -939,6 +1011,7 @@
         if (idx !== -1) {
             leaves[idx].status = 'approved';
             localStorage.setItem('leaveData', JSON.stringify(leaves));
+            syncToCloud();
             playAudioNotification('success');
             alert('อนุมัติการลาเรียบร้อยแล้ว!');
             loadLeaves();
@@ -1036,7 +1109,6 @@
             playAudioNotification('success');
             alert('แก้ไขรายการวันลาเรียบร้อยแล้ว!');
         } else {
-            // เมื่อสร้างการลาใหม่ กำหนดสถานะตั้งต้นเป็น 'pending' (รออนุมัติ)
             leaves.push({
                 id: Date.now(),
                 empName: empName,
@@ -1051,6 +1123,7 @@
         }
 
         localStorage.setItem('leaveData', JSON.stringify(leaves));
+        syncToCloud();
         cancelEditMode();
         loadLeaves();
         switchPage('mySummaryView');
@@ -1096,6 +1169,7 @@
         if (confirm('คุณต้องการยกเลิก/ลบรายการลานี้ใช่หรือไม่?')) {
             let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
             localStorage.setItem('leaveData', JSON.stringify(leaves.filter(leave => leave.id !== id)));
+            syncToCloud();
             playAudioNotification('success');
             loadLeaves();
         }
@@ -1124,7 +1198,6 @@
                 activeLeaves.forEach(leave => {
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
                     
-                    // แสดงสถานะอนุมัติ / รออนุมัติ
                     let statusBadge = (leave.status === 'approved') 
                         ? `<span class="badge bg-success px-3 py-2">${lang.approvedStatus}</span>` 
                         : `<span class="badge bg-warning text-dark px-3 py-2">${lang.pendingStatus}</span>`;
@@ -1274,8 +1347,7 @@
     }
 
     initDefaultAdmin();
-    loadEmployees();
-    loadLeaves();
+    fetchCloudData();
 </script>
 </body>
 </html>
