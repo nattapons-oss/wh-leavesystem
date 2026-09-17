@@ -469,11 +469,19 @@
     // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
+    // แก้ไขฟังก์ชันแปลงวันที่เป็นมาตรฐาน ISO ให้คำนึงถึงเวลาในไทย
     function parseDateToISO(dateStr) {
         if (!dateStr) return '';
         let str = String(dateStr).trim();
+        
         if (str.includes('T')) {
-            str = str.split('T')[0];
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
         }
         if (str.includes('/')) {
             const parts = str.split('/');
@@ -482,12 +490,11 @@
         return str;
     }
 
-    // ฟังก์ชันจัดรูปแบบการแสดงผลวันที่ (แก้ไขปัญหาวันที่ติดเวลา ISO String)
+    // แก้ไขฟังก์ชันจัดรูปแบบแสดงผล ให้ดึงเวลาตามท้องถิ่น ป้องกันปัญหาเปลี่ยนวัน
     function formatDateDisplay(dateStr) {
         if (!dateStr) return '';
         let str = String(dateStr).trim();
         
-        // หากส่งมาเป็น ISO String เช่น 2026-12-26T17:00:00.000Z ให้แปลงเป็น Date ก่อน
         if (str.includes('T')) {
             const d = new Date(str);
             if (!isNaN(d.getTime())) {
@@ -496,12 +503,11 @@
                 const year = d.getFullYear();
                 return `${day}/${month}/${year}`;
             }
-            str = str.split('T')[0];
         }
 
         if (str.includes('-')) {
             const parts = str.split('-');
-            if (parts.length >= 3) return `${parts[2].substring(0,2)}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+            if (parts.length >= 3) return `${parts[2].substring(0, 2).padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
         }
         return str;
     }
