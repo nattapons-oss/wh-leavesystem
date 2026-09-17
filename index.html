@@ -469,7 +469,6 @@
     // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
-    // แก้ไขฟังก์ชันแปลงวันที่เป็นมาตรฐาน ISO ให้คำนึงถึงเวลาในไทย
     function parseDateToISO(dateStr) {
         if (!dateStr) return '';
         let str = String(dateStr).trim();
@@ -490,7 +489,6 @@
         return str;
     }
 
-    // แก้ไขฟังก์ชันจัดรูปแบบแสดงผล ให้ดึงเวลาตามท้องถิ่น ป้องกันปัญหาเปลี่ยนวัน
     function formatDateDisplay(dateStr) {
         if (!dateStr) return '';
         let str = String(dateStr).trim();
@@ -527,8 +525,8 @@
 
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                // ปรับแต่ง header เป็น text/plain ป้องกันการบล็อกของเบราว์เซอร์เวลาส่งข้อมูลขนาดใหญ่
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'syncData', leaves, employees, users })
             });
         } catch (e) {
@@ -820,13 +818,42 @@
         switchPage('upcomingView');
     }
 
+    // แก้ไขฟังก์ชันอัปโหลดรูป: เพิ่มการย่อขนาดรูปลง Canvas ก่อนแปลงเป็นโค้ดเพื่อไม่ให้เกิน Limit ของ Sheets
     function previewProfileImage(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                tempAvatarBase64 = e.target.result;
-                document.getElementById('profAvatarPreview').src = tempAvatarBase64;
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 150; // กำหนดความกว้างสูงสุด
+                    const MAX_HEIGHT = 150; // กำหนดความสูงสูงสุด
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // บีบอัดเป็นรูป .jpeg ที่คุณภาพ 70% จะช่วยลดขนาดโค้ด Base64 ได้หลายเท่าตัว
+                    tempAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('profAvatarPreview').src = tempAvatarBase64;
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
