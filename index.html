@@ -469,6 +469,43 @@
     // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
+    function parseDateToISO(dateStr) {
+        if (!dateStr) return '';
+        let str = String(dateStr).trim();
+        if (str.includes('T')) {
+            str = str.split('T')[0];
+        }
+        if (str.includes('/')) {
+            const parts = str.split('/');
+            if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        return str;
+    }
+
+    // ฟังก์ชันจัดรูปแบบการแสดงผลวันที่ (แก้ไขปัญหาวันที่ติดเวลา ISO String)
+    function formatDateDisplay(dateStr) {
+        if (!dateStr) return '';
+        let str = String(dateStr).trim();
+        
+        // หากส่งมาเป็น ISO String เช่น 2026-12-26T17:00:00.000Z ให้แปลงเป็น Date ก่อน
+        if (str.includes('T')) {
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            str = str.split('T')[0];
+        }
+
+        if (str.includes('-')) {
+            const parts = str.split('-');
+            if (parts.length >= 3) return `${parts[2].substring(0,2)}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
+        return str;
+    }
+
     function showSyncSpinner(show) {
         const spinner = document.getElementById('syncIndicator');
         if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
@@ -503,7 +540,14 @@
             const data = await res.json();
 
             if (data) {
-                if (data.leaves) localStorage.setItem('leaveData', JSON.stringify(data.leaves));
+                if (data.leaves) {
+                    const parsedLeaves = data.leaves.map(l => {
+                        l.startDate = parseDateToISO(l.startDate);
+                        l.endDate = parseDateToISO(l.endDate);
+                        return l;
+                    });
+                    localStorage.setItem('leaveData', JSON.stringify(parsedLeaves));
+                }
                 if (data.users) localStorage.setItem('users', JSON.stringify(data.users));
                 if (data.employees) {
                     const parsedEmps = data.employees.map(e => {
@@ -584,7 +628,7 @@
             dashTitle: "แดชบอร์ดภาพรวม (WH Pantai)", statTotalLeaves: "การลาทั้งหมด", statSickLeaves: "ลาป่วยรวม", statVacation: "ลาพักร้อนรวม",
             tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thAmount: "จำนวน", thReason: "เหตุผล", thStatus: "สถานะ", thAction: "จัดการ (Admin)",
             empFormTitle: "เพิ่มพนักงานใหม่", lblEmpName: "ชื่อ-นามสกุล", lblEmpUser: "Username", lblEmpPhone: "เบอร์โทรศัพท์", lblEmpDept: "แผนก", btnAddEmp: "เพิ่มพนักงาน",
-            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpRole: "สิทธิ์ใช้งาน", thEmpAction: "จัดการ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", resetPassBtn: "🔑 รีเซ็ต", setQuotaBtn: "⚙️ โควต้า", approveBtn: "✅ อนุมัติ", pendingStatus: "⏳ รออนุมัติ", approvedStatus: "🟢 อนุมัติแล้ว",
+            empTableTitle: "รายชื่อพนักงาน", thEmpName: "ชื่อ", thEmpPhone: "เบอร์โทรศัพท์", thEmpDept: "แผนก", thEmpRole: "สิทธิ์ใช้งาน", thEmpAction: "จัดการ", deleteBtn: "ลบ", editBtn: "แก้ไข", cancelBtn: "ยกเลิก", resetPassBtn: "🔑 รีเซ็ต", setQuotaBtn: "⚙️ โควต้า", approveBtn: "✅ ออนุมัติ", pendingStatus: "⏳ รออนุมัติ", approvedStatus: "🟢 อนุมัติแล้ว",
             txtDayUnit: "วัน", txtCountUnit: "ครั้ง", noLeavesMsg: "ไม่มีรายการวันลาที่กำลังจะถึงในขณะนี้", noHistoryMsg: "ไม่พบประวัติการลาในปีนี้"
         },
         en: {
@@ -630,28 +674,10 @@
     let startPicker = flatpickr("#startDate", { dateFormat: "d/m/Y", allowInput: true });
     let endPicker = flatpickr("#endDate", { dateFormat: "d/m/Y", allowInput: true });
 
-    function parseDateToISO(dateStr) {
-        if (!dateStr) return '';
-        if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-        }
-        return dateStr;
-    }
-
-    function formatDateDisplay(dateStr) {
-        if (!dateStr) return '';
-        if (dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-        return dateStr;
-    }
-
     function calculateDays(startDateStr, endDateStr) {
         if (!startDateStr || !endDateStr) return 0;
-        const start = new Date(startDateStr);
-        const end = new Date(endDateStr);
+        const start = new Date(parseDateToISO(startDateStr));
+        const end = new Date(parseDateToISO(endDateStr));
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         return diffDays > 0 ? diffDays : 0;
@@ -1189,7 +1215,7 @@
         const upcomingTbody = document.getElementById('upcomingTableBody');
         if(upcomingTbody) {
             upcomingTbody.innerHTML = '';
-            const activeLeaves = leaves.filter(leave => leave.endDate >= todayStr);
+            const activeLeaves = leaves.filter(leave => parseDateToISO(leave.endDate) >= todayStr);
 
             if(activeLeaves.length === 0) {
                 const colspanVal = (currentUser && currentUser.role === 'admin') ? 8 : 6;
@@ -1237,7 +1263,8 @@
             const userQuota = (myEmp && myEmp.quota) ? myEmp.quota : { sick: 30, personal: 6, vacation: 7 };
 
             const myLeaves = leaves.filter(l => {
-                const leaveYear = l.startDate ? l.startDate.split('-')[0] : '';
+                const isoStart = parseDateToISO(l.startDate);
+                const leaveYear = isoStart ? isoStart.split('-')[0] : '';
                 return (l.empName.trim() === currentUser.fullName.trim()) && (leaveYear === selectedUserYear);
             });
 
@@ -1291,7 +1318,8 @@
             const selectedEmpFilter = document.getElementById('adminEmpFilter').value;
 
             let filteredAdminLeaves = leaves.filter(l => {
-                const leaveYear = l.startDate ? l.startDate.split('-')[0] : '';
+                const isoStart = parseDateToISO(l.startDate);
+                const leaveYear = isoStart ? isoStart.split('-')[0] : '';
                 const matchYear = (selectedAdminYear === 'ALL') || (leaveYear === selectedAdminYear);
                 const matchEmp = (selectedEmpFilter === 'ALL') || (l.empName === selectedEmpFilter);
                 return matchYear && matchEmp;
