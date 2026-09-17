@@ -469,11 +469,9 @@
     // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
-    // ฟังก์ชันจัดรูปแบบเบอร์โทรศัพท์ให้อยู่ในรูปแบบ String และมีเลข 0 ด้านหน้าเสมอ
     function formatPhoneNumber(phone) {
         if (!phone) return '-';
         let strPhone = String(phone).trim();
-        // ถ้าเป็นตัวเลข และความยาวไม่เกิน 9 หลัก ให้เติมเลข 0 ด้านหน้า
         if (strPhone !== '' && !strPhone.startsWith('0') && strPhone.length <= 9) {
             strPhone = strPhone.padStart(10, '0');
         }
@@ -526,6 +524,23 @@
         if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
     }
 
+    // ฟังก์ชันความปลอดภัย: ดึงข้อมูลล่าสุดก่อนทำการแก้ไข เพื่อไม่ให้ข้อมูลของคนอื่นหาย
+    async function safeDataUpdate(updateFn) {
+        showSyncSpinner(true);
+        try {
+            await fetchCloudDataSilent(); // ดึงข้อมูลล่าสุดจาก คลาวด์ มาลง LocalStorage ก่อน
+            const proceed = updateFn();   // ทำการแก้ไข/อัปเดตข้อมูล
+            if (proceed === false) return false;
+            await syncToCloud();          // ส่งข้อมูลกลับขึ้นคลาวด์
+            return true;
+        } catch (e) {
+            console.error("Data Update Sync Error:", e);
+            throw e;
+        } finally {
+            showSyncSpinner(false);
+        }
+    }
+
     async function syncToCloud() {
         if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
         showSyncSpinner(true);
@@ -546,13 +561,11 @@
         }
     }
 
-    async function fetchCloudData() {
+    async function fetchCloudDataSilent() {
         if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
-        showSyncSpinner(true);
         try {
             const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitialData`);
             const data = await res.json();
-
             if (data) {
                 if (data.leaves) {
                     const parsedLeaves = data.leaves.map(l => {
@@ -569,19 +582,48 @@
                             try { e.quota = JSON.parse(e.quota); } catch(err){}
                         }
                         if (!e.quota) e.quota = { sick: 30, personal: 6, vacation: 7 };
-                        // จัดการฟอร์แมตเบอร์โทรศัพท์ตั้งแต่ดึงมาจากคลาวด์
                         e.phone = formatPhoneNumber(e.phone);
                         return e;
                     });
                     localStorage.setItem('employees', JSON.stringify(parsedEmps));
                 }
-                loadEmployees();
-                loadLeaves();
             }
-        } catch (e) {
-            console.error("Fetch Cloud Error:", e);
-        } finally {
-            showSyncSpinner(false);
+        } catch(e) {
+            console.error("Silent Fetch Error:", e);
+        }
+    }
+
+    async function fetchCloudData() {
+        showSyncSpinner(true);
+        await fetchCloudDataSilent();
+        checkAndCreateDefaultAdmin();
+        loadEmployees();
+        loadLeaves();
+        showSyncSpinner(false);
+    }
+
+    function checkAndCreateDefaultAdmin() {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        const adminExists = users.some(u => u.username === 'Nattapons');
+        
+        if (!adminExists) {
+            users.push({
+                username: 'Nattapons',
+                password: '235050',
+                fullName: 'Nattapons (WH Pantai Admin)',
+                phone: '0800000000',
+                dept: 'WH Pantai',
+                role: 'admin',
+                avatar: defaultAvatar
+            });
+            localStorage.setItem('users', JSON.stringify(users));
+
+            let emps = JSON.parse(localStorage.getItem('employees')) || [];
+            if (!emps.some(e => e.name === 'Nattapons (WH Pantai Admin)')) {
+                emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai', quota: { sick: 30, personal: 6, vacation: 7 } });
+                localStorage.setItem('employees', JSON.stringify(emps));
+            }
+            syncToCloud();
         }
     }
 
@@ -726,32 +768,7 @@
         document.getElementById(pageCardId).classList.remove('d-none');
     }
 
-    function initDefaultAdmin() {
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        const adminExists = users.some(u => u.username === 'Nattapons');
-        
-        if (!adminExists) {
-            users.push({
-                username: 'Nattapons',
-                password: '235050',
-                fullName: 'Nattapons (WH Pantai Admin)',
-                phone: '0800000000',
-                dept: 'WH Pantai',
-                role: 'admin',
-                avatar: defaultAvatar
-            });
-            localStorage.setItem('users', JSON.stringify(users));
-
-            let emps = JSON.parse(localStorage.getItem('employees')) || [];
-            if (!emps.some(e => e.name === 'Nattapons (WH Pantai Admin)')) {
-                emps.push({ id: Date.now(), name: 'Nattapons (WH Pantai Admin)', phone: '0800000000', dept: 'WH Pantai', quota: { sick: 30, personal: 6, vacation: 7 } });
-                localStorage.setItem('employees', JSON.stringify(emps));
-            }
-            syncToCloud();
-        }
-    }
-
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const fullName = document.getElementById('regFullName').value.trim();
         const phone = formatPhoneNumber(document.getElementById('regPhone').value.trim());
@@ -759,32 +776,45 @@
         const username = document.getElementById('regUsername').value.trim();
         const password = document.getElementById('regPassword').value.trim();
 
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-            playAudioNotification('error');
-            alert('Username นี้ถูกใช้งานแล้ว / Username already exists');
+        let isSuccess = false;
+        try {
+            isSuccess = await safeDataUpdate(() => {
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                    playAudioNotification('error');
+                    alert('Username นี้ถูกใช้งานแล้ว / Username already exists');
+                    return false;
+                }
+
+                users.push({ username, password, fullName, phone, dept, role: 'user', avatar: defaultAvatar });
+                localStorage.setItem('users', JSON.stringify(users));
+
+                let emps = JSON.parse(localStorage.getItem('employees')) || [];
+                emps.push({ id: Date.now(), name: fullName, phone: phone, dept: dept, quota: { sick: 30, personal: 6, vacation: 7 } });
+                localStorage.setItem('employees', JSON.stringify(emps));
+            });
+        } catch(err) {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
             return;
         }
 
-        users.push({ username, password, fullName, phone, dept, role: 'user', avatar: defaultAvatar });
-        localStorage.setItem('users', JSON.stringify(users));
-
-        let emps = JSON.parse(localStorage.getItem('employees')) || [];
-        emps.push({ id: Date.now(), name: fullName, phone: phone, dept: dept, quota: { sick: 30, personal: 6, vacation: 7 } });
-        localStorage.setItem('employees', JSON.stringify(emps));
-
-        syncToCloud();
-        playAudioNotification('success');
-        alert('ลงทะเบียนสำเร็จ! / Registration successful!');
-        this.reset();
-        loadEmployees();
-        showAuthPage('loginCard');
+        if (isSuccess) {
+            playAudioNotification('success');
+            alert('ลงทะเบียนสำเร็จ! / Registration successful!');
+            this.reset();
+            loadEmployees();
+            showAuthPage('loginCard');
+        }
     });
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const u = document.getElementById('loginUsername').value.trim();
         const p = document.getElementById('loginPassword').value.trim();
+
+        showSyncSpinner(true);
+        await fetchCloudDataSilent(); // ดึงผู้ใช้ล่าสุดก่อนตรวจสอบ Login
+        showSyncSpinner(false);
 
         let users = JSON.parse(localStorage.getItem('users')) || [];
         const foundUser = users.find(user => user.username === u && user.password === p);
@@ -869,40 +899,41 @@
         }
     }
 
-    document.getElementById('profileForm').addEventListener('submit', function(e) {
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const oldFullName = currentUser.fullName;
         const newFullName = document.getElementById('profFullName').value.trim();
         const newPhone = formatPhoneNumber(document.getElementById('profPhone').value.trim());
         const newDept = document.getElementById('profDept').value.trim();
 
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let userIndex = users.findIndex(u => u.username === currentUser.username);
-        if (userIndex !== -1) {
-            users[userIndex].fullName = newFullName;
-            users[userIndex].phone = newPhone;
-            users[userIndex].dept = newDept;
-            if (tempAvatarBase64) users[userIndex].avatar = tempAvatarBase64;
-            localStorage.setItem('users', JSON.stringify(users));
-            currentUser = users[userIndex];
-        }
+        await safeDataUpdate(() => {
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            let userIndex = users.findIndex(u => u.username === currentUser.username);
+            if (userIndex !== -1) {
+                users[userIndex].fullName = newFullName;
+                users[userIndex].phone = newPhone;
+                users[userIndex].dept = newDept;
+                if (tempAvatarBase64) users[userIndex].avatar = tempAvatarBase64;
+                localStorage.setItem('users', JSON.stringify(users));
+                currentUser = users[userIndex];
+            }
 
-        let emps = JSON.parse(localStorage.getItem('employees')) || [];
-        let empIndex = emps.findIndex(e => e.name === oldFullName);
-        if (empIndex !== -1) {
-            emps[empIndex].name = newFullName;
-            emps[empIndex].phone = newPhone;
-            emps[empIndex].dept = newDept;
-            localStorage.setItem('employees', JSON.stringify(emps));
-        }
+            let emps = JSON.parse(localStorage.getItem('employees')) || [];
+            let empIndex = emps.findIndex(e => e.name === oldFullName);
+            if (empIndex !== -1) {
+                emps[empIndex].name = newFullName;
+                emps[empIndex].phone = newPhone;
+                emps[empIndex].dept = newDept;
+                localStorage.setItem('employees', JSON.stringify(emps));
+            }
 
-        let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
-        leaves.forEach(leave => {
-            if (leave.empName === oldFullName) leave.empName = newFullName;
+            let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+            leaves.forEach(leave => {
+                if (leave.empName === oldFullName) leave.empName = newFullName;
+            });
+            localStorage.setItem('leaveData', JSON.stringify(leaves));
         });
-        localStorage.setItem('leaveData', JSON.stringify(leaves));
 
-        syncToCloud();
         const avatarSrc = currentUser.avatar || defaultAvatar;
         document.getElementById('currentUserNameDisplay').innerText = `(${currentUser.fullName})`;
         document.getElementById('navAvatar').src = avatarSrc;
@@ -940,98 +971,103 @@
         document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
 
         document.getElementById(pageId).classList.add('active');
-        if(pageId === 'upcomingView') {
-            document.getElementById('menuUpcoming').classList.add('active');
-            loadLeaves();
-        }
+        if(pageId === 'upcomingView') document.getElementById('menuUpcoming').classList.add('active');
         if(pageId === 'requestView') document.getElementById('menuRequest').classList.add('active');
-        if(pageId === 'mySummaryView') {
-            document.getElementById('menuMySummary').classList.add('active');
-            loadLeaves();
-        }
+        if(pageId === 'mySummaryView') document.getElementById('menuMySummary').classList.add('active');
         if(pageId === 'profileView') document.getElementById('menuProfile').classList.add('active');
         if(pageId === 'dashboardView') document.getElementById('menuDashboard').classList.add('active');
         if(pageId === 'employeeView') document.getElementById('menuEmployee').classList.add('active');
+
+        // ทุกครั้งที่สลับหน้าเมนู ให้ดึงข้อมูลล่าสุดอัตโนมัติ
+        fetchCloudData();
     }
 
-    document.getElementById('empForm').addEventListener('submit', function(e) {
+    document.getElementById('empForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        let emps = JSON.parse(localStorage.getItem('employees')) || [];
-        emps.push({ 
-            id: Date.now(), 
-            name: document.getElementById('newEmpName').value.trim(), 
-            phone: formatPhoneNumber(document.getElementById('newEmpPhone').value.trim()), 
-            dept: document.getElementById('newEmpDept').value.trim(),
-            quota: { sick: 30, personal: 6, vacation: 7 }
+        const empName = document.getElementById('newEmpName').value.trim();
+        const empPhone = formatPhoneNumber(document.getElementById('newEmpPhone').value.trim());
+        const empDept = document.getElementById('newEmpDept').value.trim();
+
+        await safeDataUpdate(() => {
+            let emps = JSON.parse(localStorage.getItem('employees')) || [];
+            emps.push({ 
+                id: Date.now(), 
+                name: empName, 
+                phone: empPhone, 
+                dept: empDept,
+                quota: { sick: 30, personal: 6, vacation: 7 }
+            });
+            localStorage.setItem('employees', JSON.stringify(emps));
         });
-        localStorage.setItem('employees', JSON.stringify(emps));
-        syncToCloud();
+
         playAudioNotification('success');
         this.reset();
         loadEmployees();
     });
 
-    function deleteEmployee(id) {
-        let emps = JSON.parse(localStorage.getItem('employees')) || [];
-        localStorage.setItem('employees', JSON.stringify(emps.filter(emp => emp.id !== id)));
-        syncToCloud();
-        playAudioNotification('success');
-        loadEmployees();
+    async function deleteEmployee(id) {
+        if (confirm('คุณต้องการลบพนักงานท่านนี้ใช่หรือไม่?')) {
+            await safeDataUpdate(() => {
+                let emps = JSON.parse(localStorage.getItem('employees')) || [];
+                localStorage.setItem('employees', JSON.stringify(emps.filter(emp => emp.id !== id)));
+            });
+            playAudioNotification('success');
+            loadEmployees();
+        }
     }
 
-    function changeUserRole(username, newRole) {
+    async function changeUserRole(username, newRole) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
             alert('เฉพาะ Admin เท่านั้นที่สามารถเปลี่ยนสิทธิ์ได้ / Admin only');
             return;
         }
 
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let uIdx = users.findIndex(u => u.username === username);
+        await safeDataUpdate(() => {
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            let uIdx = users.findIndex(u => u.username === username);
 
-        if (uIdx !== -1) {
-            users[uIdx].role = newRole;
-            localStorage.setItem('users', JSON.stringify(users));
+            if (uIdx !== -1) {
+                users[uIdx].role = newRole;
+                localStorage.setItem('users', JSON.stringify(users));
 
-            if (currentUser.username === username) {
-                currentUser.role = newRole;
-                applyRolePermissions();
+                if (currentUser.username === username) {
+                    currentUser.role = newRole;
+                }
             }
+        });
 
-            syncToCloud();
-            playAudioNotification('success');
-            alert(`เปลี่ยนสิทธิ์ของ ${users[uIdx].fullName} เป็น ${newRole.toUpperCase()} เรียบร้อยแล้ว!`);
-            loadEmployees();
-        }
+        applyRolePermissions();
+        playAudioNotification('success');
+        alert(`เปลี่ยนสิทธิ์เรียบร้อยแล้ว!`);
+        loadEmployees();
     }
 
-    function resetUserPassword(username) {
+    async function resetUserPassword(username) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
             alert('เฉพาะ Admin เท่านั้นที่สามารถรีเซ็ตรหัสผ่านได้ / Admin only');
             return;
         }
 
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let uIdx = users.findIndex(u => u.username === username);
+        const newPassword = prompt(`กรอกรหัสผ่านใหม่สำหรับ Username: "${username}"`, "123456");
+        if (newPassword !== null && newPassword.trim() !== "") {
+            await safeDataUpdate(() => {
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                let uIdx = users.findIndex(u => u.username === username);
 
-        if (uIdx !== -1) {
-            const newPassword = prompt(`กรอกรหัสผ่านใหม่สำหรับ Username: "${username}"`, "123456");
-            
-            if (newPassword !== null && newPassword.trim() !== "") {
-                users[uIdx].password = newPassword.trim();
-                localStorage.setItem('users', JSON.stringify(users));
-                syncToCloud();
-                playAudioNotification('success');
-                alert(`ตั้งรหัสผ่านใหม่ให้บัญชี "${username}" เรียบร้อยแล้ว!`);
-            }
-        } else {
-            playAudioNotification('error');
-            alert('ไม่พบบัญชีผู้ใช้นี้ในระบบ');
+                if (uIdx !== -1) {
+                    users[uIdx].password = newPassword.trim();
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+            });
+
+            playAudioNotification('success');
+            alert(`ตั้งรหัสผ่านใหม่ให้บัญชี "${username}" เรียบร้อยแล้ว!`);
         }
     }
 
-    function editEmployeeQuota(empId) {
+    async function editEmployeeQuota(empId) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
             alert('เฉพาะ Admin เท่านั้น / Admin only');
@@ -1052,39 +1088,46 @@
             const vacationStr = prompt(`กำหนดโควต้า "ลาพักร้อน" (วัน/ปี) สำหรับ ${emp.name}:`, currentQ.vacation);
             if (vacationStr === null) return;
 
-            emp.quota = {
-                sick: parseInt(sickStr) || 0,
-                personal: parseInt(personalStr) || 0,
-                vacation: parseInt(vacationStr) || 0
-            };
+            await safeDataUpdate(() => {
+                let freshEmps = JSON.parse(localStorage.getItem('employees')) || [];
+                let target = freshEmps.find(e => e.id === empId);
+                if (target) {
+                    target.quota = {
+                        sick: parseInt(sickStr) || 0,
+                        personal: parseInt(personalStr) || 0,
+                        vacation: parseInt(vacationStr) || 0
+                    };
+                    localStorage.setItem('employees', JSON.stringify(freshEmps));
+                }
+            });
 
-            localStorage.setItem('employees', JSON.stringify(emps));
-            syncToCloud();
             playAudioNotification('success');
-            alert(`บันทึกโควต้าวันลาของ ${emp.name} เรียบร้อยแล้ว!`);
+            alert(`บันทึกโควต้าวันลาเรียบร้อยแล้ว!`);
             loadEmployees();
             loadLeaves();
         }
     }
 
-    function approveLeave(leaveId) {
+    async function approveLeave(leaveId) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
             alert('เฉพาะ Admin เท่านั้นที่สามารถอนุมัติได้');
             return;
         }
 
-        let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
-        let idx = leaves.findIndex(l => l.id == leaveId);
+        await safeDataUpdate(() => {
+            let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+            let idx = leaves.findIndex(l => l.id == leaveId);
 
-        if (idx !== -1) {
-            leaves[idx].status = 'approved';
-            localStorage.setItem('leaveData', JSON.stringify(leaves));
-            syncToCloud();
-            playAudioNotification('success');
-            alert('อนุมัติการลาเรียบร้อยแล้ว!');
-            loadLeaves();
-        }
+            if (idx !== -1) {
+                leaves[idx].status = 'approved';
+                localStorage.setItem('leaveData', JSON.stringify(leaves));
+            }
+        });
+
+        playAudioNotification('success');
+        alert('อนุมัติการลาเรียบร้อยแล้ว!');
+        loadLeaves();
     }
 
     function loadEmployees() {
@@ -1124,7 +1167,6 @@
                     actionBtnsHtml += `<button class="btn btn-info text-white btn-sm me-1" onclick="editEmployeeQuota(${emp.id})">${lang.setQuotaBtn}</button>`;
                 }
 
-                // เรียกใช้ formatPhoneNumber เพื่อรับประกันว่าจะไม่โดนตัดเลข 0 หน้า
                 const phoneDisplay = formatPhoneNumber(emp.phone);
 
                 tbody.innerHTML += `
@@ -1153,7 +1195,7 @@
         }
     }
 
-    document.getElementById('leaveForm').addEventListener('submit', function(e) {
+    document.getElementById('leaveForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const empName = currentUser.fullName;
 
@@ -1166,36 +1208,44 @@
             return; 
         }
 
-        let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
         const editingId = document.getElementById('editingLeaveId').value;
+        const lType = document.getElementById('leaveType').value;
+        const lReason = document.getElementById('reason').value;
+        const sDate = parseDateToISO(startRaw);
+        const eDate = parseDateToISO(endRaw);
 
-        if (editingId) {
-            let idx = leaves.findIndex(l => l.id == editingId);
-            if (idx !== -1) {
-                leaves[idx].empName = empName;
-                leaves[idx].leaveType = document.getElementById('leaveType').value;
-                leaves[idx].startDate = parseDateToISO(startRaw);
-                leaves[idx].endDate = parseDateToISO(endRaw);
-                leaves[idx].reason = document.getElementById('reason').value;
+        await safeDataUpdate(() => {
+            let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+            if (editingId) {
+                let idx = leaves.findIndex(l => l.id == editingId);
+                if (idx !== -1) {
+                    leaves[idx].empName = empName;
+                    leaves[idx].leaveType = lType;
+                    leaves[idx].startDate = sDate;
+                    leaves[idx].endDate = eDate;
+                    leaves[idx].reason = lReason;
+                }
+            } else {
+                leaves.push({
+                    id: Date.now(),
+                    empName: empName,
+                    leaveType: lType,
+                    startDate: sDate,
+                    endDate: eDate,
+                    reason: lReason,
+                    status: 'pending'
+                });
             }
-            playAudioNotification('success');
+            localStorage.setItem('leaveData', JSON.stringify(leaves));
+        });
+
+        playAudioNotification('success');
+        if (editingId) {
             alert('แก้ไขรายการวันลาเรียบร้อยแล้ว!');
         } else {
-            leaves.push({
-                id: Date.now(),
-                empName: empName,
-                leaveType: document.getElementById('leaveType').value,
-                startDate: parseDateToISO(startRaw),
-                endDate: parseDateToISO(endRaw),
-                reason: document.getElementById('reason').value,
-                status: 'pending'
-            });
-            playAudioNotification('success');
             alert('บันทึกการลาเรียบร้อย (รอ Admin อนุมัติ)');
         }
 
-        localStorage.setItem('leaveData', JSON.stringify(leaves));
-        syncToCloud();
         cancelEditMode();
         loadLeaves();
         switchPage('mySummaryView');
@@ -1237,11 +1287,12 @@
         }
     }
 
-    function deleteLeave(id) {
+    async function deleteLeave(id) {
         if (confirm('คุณต้องการยกเลิก/ลบรายการลานี้ใช่หรือไม่?')) {
-            let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
-            localStorage.setItem('leaveData', JSON.stringify(leaves.filter(leave => leave.id !== id)));
-            syncToCloud();
+            await safeDataUpdate(() => {
+                let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
+                localStorage.setItem('leaveData', JSON.stringify(leaves.filter(leave => leave.id !== id)));
+            });
             playAudioNotification('success');
             loadLeaves();
         }
@@ -1420,8 +1471,18 @@
         }
     }
 
-    initDefaultAdmin();
+    // เริ่มต้นระบบ
     fetchCloudData();
+
+    // เพิ่มระบบแอบซิงค์ข้อมูลใหม่ทุกๆ 30 วินาที ให้หน้าจอทุกคนอัปเดตตลอดเวลา
+    setInterval(() => {
+        if (currentUser) {
+            fetchCloudDataSilent().then(() => {
+                loadEmployees();
+                loadLeaves();
+            });
+        }
+    }, 30000);
 </script>
 </body>
 </html>
