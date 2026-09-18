@@ -167,7 +167,7 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <p class="text-muted small mb-3" id="upcomingDesc">* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดวันลา หรือกำลังอยู่ในช่วงลาเท่านั้น</p>
+                <p class="text-muted small mb-3" id="upcomingDesc">* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดหรือกำลังอยู่ในช่วงลาเท่านั้น</p>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle table-custom-header">
                         <thead>
@@ -527,7 +527,7 @@
     }
 
     async function syncToCloud() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec")) return;
         showSyncSpinner(true);
         try {
             const leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
@@ -547,7 +547,7 @@
     }
 
     async function fetchCloudData() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec")) return;
         showSyncSpinner(true);
         try {
             const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitialData`);
@@ -558,6 +558,9 @@
                     const parsedLeaves = data.leaves.map(l => {
                         l.startDate = parseDateToISO(l.startDate);
                         l.endDate = parseDateToISO(l.endDate);
+                        if (l.customDays !== undefined && l.customDays !== null && l.customDays !== '') {
+                            l.customDays = parseFloat(l.customDays);
+                        }
                         return l;
                     });
                     localStorage.setItem('leaveData', JSON.stringify(parsedLeaves));
@@ -577,7 +580,6 @@
                 }
                 if (data.employees) {
                     const parsedEmps = data.employees.map(e => {
-                        // ปรับปรุงระบบตรวจสอบข้อมูล Quota ให้แปลงค่าจาก String เป็น Object เสมอ
                         if (typeof e.quota === 'string' && e.quota.trim() !== '') {
                             try { e.quota = JSON.parse(e.quota); } catch(err){ e.quota = null; }
                         }
@@ -725,6 +727,14 @@
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         return diffDays > 0 ? diffDays : 0;
+    }
+
+    // ดึงค่าจำนวนวันลาที่แท้จริง โดยรองรับค่าทศนิยม (เช่น 0.5)
+    function getLeaveDaysVal(leave) {
+        if (leave.customDays !== undefined && leave.customDays !== null && leave.customDays !== '' && !isNaN(leave.customDays)) {
+            return parseFloat(leave.customDays);
+        }
+        return calculateDays(leave.startDate, leave.endDate);
     }
 
     function autoCalculateLeaveDays() {
@@ -1090,7 +1100,6 @@
         }
     }
 
-    // ปรับแก้การแก้ไขโควต้าให้ทำงานได้อย่างถูกต้อง และซิงค์ขึ้น Cloud ทันที
     async function editEmployeeQuota(empId) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
@@ -1291,7 +1300,7 @@
             startPicker.setDate(formatDateDisplay(leave.startDate));
             endPicker.setDate(formatDateDisplay(leave.endDate));
             
-            document.getElementById('leaveDays').value = leave.customDays || calculateDays(leave.startDate, leave.endDate);
+            document.getElementById('leaveDays').value = getLeaveDaysVal(leave);
             document.getElementById('reason').value = leave.reason;
 
             document.getElementById('editModeBadge').classList.remove('d-none');
@@ -1349,7 +1358,7 @@
                 upcomingTbody.innerHTML = `<tr><td colspan="${colspanVal}" class="text-center text-muted p-4">${lang.noLeavesMsg}</td></tr>`;
             } else {
                 activeLeaves.forEach(leave => {
-                    const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
+                    const days = getLeaveDaysVal(leave);
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
                     
                     let statusBadge = (leave.status === 'approved') 
@@ -1410,7 +1419,7 @@
                     myHistoryTbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted p-4">${lang.noHistoryMsg}</td></tr>`;
                 } else {
                     myLeaves.forEach(leave => {
-                        const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
+                        const days = getLeaveDaysVal(leave);
 
                         if (leave.leaveType === 'sick') mySickDays += days;
                         if (leave.leaveType === 'personal') myPersonalDays += days;
@@ -1431,7 +1440,7 @@
                                 <td>${statusBadge}</td>
                                 <td>
                                     <button class="btn btn-warning btn-sm me-1" onclick="startEditLeave(${leave.id})">✏️ ${lang.editBtn}</button>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">🗑️ ${lang.cancelBtn}</button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteLeave(${leave.id})">${lang.cancelBtn}</button>
                                 </td>
                             </tr>`;
                     });
@@ -1461,7 +1470,7 @@
             let sickCountDays = 0, personalCountDays = 0, vacCountDays = 0;
 
             filteredAdminLeaves.forEach(leave => {
-                const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
+                const days = getLeaveDaysVal(leave);
                 if(leave.leaveType === 'sick') sickCountDays += days;
                 if(leave.leaveType === 'personal') personalCountDays += days;
                 if(leave.leaveType === 'vacation') vacCountDays += days;
