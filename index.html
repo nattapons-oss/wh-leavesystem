@@ -469,7 +469,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfitYZ3c0rj9FA6LuMK1oyqB2LNjnZoOzDnZ6Rl8q7tpXSBXX5lzbYG4FP_5ljh2h4kg/exec";
 
     function formatPhoneNumber(phone) {
         if (!phone) return '-';
@@ -527,7 +527,7 @@
     }
 
     async function syncToCloud() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyfitYZ3c0rj9FA6LuMK1oyqB2LNjnZoOzDnZ6Rl8q7tpXSBXX5lzbYG4FP_5ljh2h4kg/exec")) return;
         showSyncSpinner(true);
         try {
             const leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
@@ -547,7 +547,7 @@
     }
 
     async function fetchCloudData() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyfitYZ3c0rj9FA6LuMK1oyqB2LNjnZoOzDnZ6Rl8q7tpXSBXX5lzbYG4FP_5ljh2h4kg/exec")) return;
         showSyncSpinner(true);
         try {
             const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitialData`);
@@ -842,7 +842,7 @@
             String(user.password || '').trim() === p
         );
 
-        if (!foundUser && GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("วาง_WEB_APP_URL")) {
+        if (!foundUser && GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyfitYZ3c0rj9FA6LuMK1oyqB2LNjnZoOzDnZ6Rl8q7tpXSBXX5lzbYG4FP_5ljh2h4kg/exec")) {
             showSyncSpinner(true);
             try {
                 await fetchCloudData();
