@@ -211,7 +211,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-secondary fw-semibold" id="lblLeaveType">ประเภท</label>
                             <select class="form-select" id="leaveType" required>
                                 <option value="sick" id="optSick">ลาป่วย</option>
@@ -219,13 +219,18 @@
                                 <option value="vacation" id="optVacation">ลาพักร้อน</option>
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-secondary fw-semibold" id="lblStartDate">เริ่ม</label>
                             <input type="text" class="form-control datepicker" id="startDate" placeholder="วัน/เดือน/ปี" required>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label text-secondary fw-semibold" id="lblEndDate">สิ้นสุด</label>
                             <input type="text" class="form-control datepicker" id="endDate" placeholder="วัน/เดือน/ปี" required>
+                        </div>
+                        <!-- เพิ่มฟิลด์ จำนวนวันลา -->
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label text-secondary fw-semibold" id="lblLeaveDays">จำนวนวันลา</label>
+                            <input type="number" class="form-control" id="leaveDays" min="0.5" step="0.5" placeholder="จำนวนวัน" required>
                         </div>
                     </div>
                     <div class="mb-4">
@@ -645,7 +650,7 @@
             regTitle: "สมัครสมาชิกพนักงาน", lblRegFullName: "ชื่อ-นามสกุล", lblRegPhone: "เบอร์โทรศัพท์", lblRegDept: "แผนก", lblRegUser: "ชื่อผู้ใช้", lblRegPass: "รหัสผ่าน", btnRegister: "ลงทะเบียน", txtHaveAccount: "มีบัญชีอยู่แล้ว?", linkGoLogin: "เข้าสู่ระบบ", btnLogout: "ออกจากระบบ",
             navTitle: "ระบบลางาน WH Pantai", menuUpcoming: "Dashboard ลางาน", menuRequest: "ฟอร์มขอลางาน", menuMySummary: "สรุปการลาของฉัน", menuProfile: "แก้ไขโปรไฟล์", menuDashboard: "แดชบอร์ด & ประวัติ", menuEmployee: "จัดการพนักงาน",
             formTitle: "แบบฟอร์มขอลางาน - WH Pantai", lblSelectEmp: "ผู้ขอลางาน", lblLeaveType: "ประเภทการลา", optSick: "ลาป่วย", optPersonal: "ลากิจ", optVacation: "ลาพักร้อน",
-            lblStartDate: "เริ่มวันที่", lblEndDate: "ถึงวันที่", lblReason: "เหตุผล", btnSubmit: "บันทึกการลา",
+            lblStartDate: "เริ่มวันที่", lblEndDate: "ถึงวันที่", lblLeaveDays: "จำนวนวันลา", lblReason: "เหตุผล", btnSubmit: "บันทึกการลา",
             mySummaryTitle: "สรุปสถิติการลาของฉัน", statMySick: "ลาป่วย", statMyPersonal: "ลากิจ", statMyVacation: "ลาพักร้อน",
             myHistoryTitle: "ประวัติการลาของคุณ", thMyType: "ประเภท", thMyStart: "เริ่มวันที่", thMyEnd: "ถึงวันที่", thMyDays: "จำนวน (วัน)", thMyReason: "เหตุผล", thMyStatus: "สถานะ", thMyActions: "จัดการ",
             profileTitle: "แก้ไขข้อมูลส่วนตัว", lblProfUsername: "ชื่อผู้ใช้", lblProfFullName: "ชื่อ-นามสกุล", lblProfPhone: "เบอร์โทรศัพท์", lblProfDept: "แผนก", btnSaveProfile: "บันทึกการแก้ไข", lblUploadImage: "📷 อัปโหลดรูปโปรไฟล์",
@@ -662,7 +667,7 @@
             regTitle: "Employee Registration", lblRegFullName: "Full Name", lblRegPhone: "Phone Number", lblRegDept: "Department", lblRegUser: "Username", lblRegPass: "Password", btnRegister: "Sign Up", txtHaveAccount: "Already have an account?", linkGoLogin: "Login", btnLogout: "Logout",
             navTitle: "WH Pantai Leave System", menuUpcoming: "Leave Dashboard", menuRequest: "Leave Form", menuMySummary: "My Summary", menuProfile: "Edit Profile", menuDashboard: "Dashboard & History", menuEmployee: "Employees",
             formTitle: "Leave Form - WH Pantai", lblSelectEmp: "Applicant Name", lblLeaveType: "Leave Type", optSick: "Sick Leave", optPersonal: "Personal Leave", optVacation: "Annual Leave",
-            lblStartDate: "Start Date", lblEndDate: "End Date", lblReason: "Reason", btnSubmit: "Submit Leave",
+            lblStartDate: "Start Date", lblEndDate: "End Date", lblLeaveDays: "Leave Days", lblReason: "Reason", btnSubmit: "Submit Leave",
             mySummaryTitle: "My Leave Summary", statMySick: "Sick Leave", statMyPersonal: "Personal Leave", statMyVacation: "Annual Leave",
             myHistoryTitle: "Your Leave History", thMyType: "Type", thMyStart: "Start Date", thMyEnd: "End Date", thMyDays: "Days", thMyReason: "Reason", thMyStatus: "Status", thMyActions: "Action",
             profileTitle: "Edit Profile", lblProfUsername: "Username", lblProfFullName: "Full Name", lblProfPhone: "Phone Number", lblProfDept: "Department", btnSaveProfile: "Save Changes", lblUploadImage: "📷 Upload Photo",
@@ -679,7 +684,7 @@
             regTitle: "ဝန်ထမ်းအကောင့်ဖွင့်ရန်", lblRegFullName: "အမည်အပြည့်အစုံ", lblRegPhone: "ဖုန်းနံပါတ်", lblRegDept: "ဌာန", lblRegUser: "အသုံးပြုသူအမည်", lblRegPass: "စကားဝှက်", btnRegister: "စာရင်းသွင်းမည်", txtHaveAccount: "အကောင့်ရှိပြီးသားလား?", linkGoLogin: "အကောင့်ဝင်ရန်", btnLogout: "ထွက်မည်",
             navTitle: "WH Pantai ခွင့်ယူစနစ်", menuUpcoming: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", menuRequest: "ခွင့်တိုင်ကြားလွှာ", menuMySummary: "ကျွန်ုပ်၏ ခွင့်အကျဉ်း", menuProfile: "ပရိုဖိုင်ပြင်ရန်", menuDashboard: "ဒက်ရှ်ဘုတ်နှင့် မှတ်တမ်း", menuEmployee: "ဝန်ထမ်းများ စီမံရန်",
             formTitle: "ခွင့်တိုင်ကြားလွှာ - WH Pantai", lblSelectEmp: "ခွင့်တိုင်ကြားသူ", lblLeaveType: "ခွင့်အမျိုးအစား", optSick: "ဆေးခွင့်", optPersonal: "ရှောင်တခင်ခွင့်", optVacation: "လုပ်သက်ခွင့်",
-            lblStartDate: "စတင်သည့်ရက်", lblEndDate: "ပြီးဆုံးသည့်ရက်", lblReason: "အကြောင်းပြချက်", btnSubmit: "ခွင့်တိုင်ကြားမည်",
+            lblStartDate: "စတင်သည့်ရက်", lblEndDate: "ပြီးဆုံးသည့်ရက်", lblLeaveDays: "ခွင့်ရက်ပေါင်း", lblReason: "အကြောင်းပြချက်", btnSubmit: "ခွင့်တိုင်ကြားမည်",
             mySummaryTitle: "ကျွန်ုပ်၏ ခွင့်ယူမှု အကျဉ်းချုပ်", statMySick: "ဆေးခွင့်", statMyPersonal: "ရှောင်တခင်ခွင့်", statMyVacation: "လုပ်သက်ခွင့်",
             myHistoryTitle: "သင်၏ ခွင့်ယူမှု မှတ်တမ်း", thMyType: "အမျိုးအစား", thMyStart: "စတင်ရက်", thMyEnd: "ပြီးဆုံးရက်", thMyDays: "ရက်ပေါင်း", thMyReason: "အကြောင်းပြချက်", thMyStatus: "အခြေအနေ", thMyActions: "လုပ်ဆောင်ချက်",
             profileTitle: "ကိုယ်ရေးအချက်အလက် ပြင်ရန်", lblProfUsername: "အသုံးပြုသူအမည်", lblProfFullName: "အမည်အပြည့်အစုံ", lblProfPhone: "ဖုန်းနံပါတ်", lblProfDept: "ဌာန", btnSaveProfile: "သိမ်းဆည်းမည်", lblUploadImage: "📷 ဓာတ်ပုံတင်မည်",
@@ -688,7 +693,7 @@
             dashTitle: "WH Pantai အထွေထွေ ဒက်ရှ်ဘုတ်", statTotalLeaves: "စုစုပေါင်း ခွင့်ယူမှု", statSickLeaves: "စုစုပေါင်း ဆေးခွင့်", statVacation: "စုစုပေါင်း လုပ်သက်ခွင့်",
             tableTitle: "ခွင့်ယူမှု မှတ်တမ်းအားလုံး", thName: "ဝန်ထမ်း", thType: "အမျိုးအစား", thStart: "စတင်ရက်", thEnd: "ပြီးဆုံးရက်", thAmount: "အရေအတွက်", thReason: "အကြောင်းပြချက်", thStatus: "အခြေအနေ", thAction: "လုပ်ဆောင်ချက် (Admin)",
             empFormTitle: "ဝန်ထမ်းသစ်ထည့်ရန်", lblEmpName: "အမည်အပြည့်အစုံ", lblEmpUser: "Username", lblEmpPhone: "ဖုန်းနံပါတ်", lblEmpDept: "ဌာန", btnAddEmp: "ဝန်ထမ်းထည့်မည်",
-            empTableTitle: "ဝန်ထမ်းစာရင်း", thEmpName: "အမည်", thEmpPhone: "ဖုန်းနံပါတ်", thEmpDept: "ဌာန", thEmpRole: "ရာထူး/စနစ်", thEmpAction: "လုပ်ဆောင်ချက်", deleteBtn: "ဖျက်မည်", editBtn: "ပြင်မည်", cancelBtn: "ပယ်ဖျက်မည်", resetPassBtn: "🔑 စကားဝှက်ပြင်မည်", setQuotaBtn: "⚙️ ခွင့်โควတာ", approveBtn: "✅ အတည်ပြုမည်", pendingStatus: "⏳ စောင့်ဆိုင်းဆဲ", approvedStatus: "🟢 ခွင့်ပြုပြီး",
+            empTableTitle: "ဝန်ထမ်းစာရင်း", thEmpName: "အမည်", thEmpPhone: "ဖုန်းနံပါတ်", thEmpDept: "ဌာန", thEmpRole: "ရာထူး/စနစ်", thEmpAction: "လုပ်ဆောင်ချက်", deleteBtn: "ဖျက်မည်", editBtn: "ပြင်မည်", cancelBtn: "ပယ်ဖျက်မည်", resetPassBtn: "🔑 စကားဝှက်ပြင်မည်", setQuotaBtn: "⚙️ ခွင့်โတွတာ", approveBtn: "✅ အတည်ပြုမည်", pendingStatus: "⏳ စောင့်ဆိုင်းဆဲ", approvedStatus: "🟢 ခွင့်ပြုပြီး",
             txtDayUnit: "ရက်", txtCountUnit: "ကြိမ်", noLeavesMsg: "လာမည့် ခွင့်ယူမှုများ မရှိသေးပါ", noHistoryMsg: "ဒီနှစ်အတွက် ခွင့်ယူမှု မှတ်တမ်း မရှိသေးပါ"
         }
     };
@@ -697,8 +702,17 @@
     let currentUser = null;
     let tempAvatarBase64 = null;
 
-    let startPicker = flatpickr("#startDate", { dateFormat: "d/m/Y", allowInput: true });
-    let endPicker = flatpickr("#endDate", { dateFormat: "d/m/Y", allowInput: true });
+    // Flatpickr พร้อมฟังก์ชันคำนวณจำนวนวันให้อัตโนมัติทันทีเมื่อเลือกวันที่
+    let startPicker = flatpickr("#startDate", { 
+        dateFormat: "d/m/Y", 
+        allowInput: true,
+        onChange: function() { autoCalculateLeaveDays(); }
+    });
+    let endPicker = flatpickr("#endDate", { 
+        dateFormat: "d/m/Y", 
+        allowInput: true,
+        onChange: function() { autoCalculateLeaveDays(); }
+    });
 
     function calculateDays(startDateStr, endDateStr) {
         if (!startDateStr || !endDateStr) return 0;
@@ -707,6 +721,18 @@
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         return diffDays > 0 ? diffDays : 0;
+    }
+
+    // ฟังก์ชันช่วยคำนวณจำนวนวันลาอัตโนมัติแล้วเติมในช่อง Leave Days
+    function autoCalculateLeaveDays() {
+        const startVal = document.getElementById('startDate').value;
+        const endVal = document.getElementById('endDate').value;
+        if (startVal && endVal) {
+            const calculated = calculateDays(startVal, endVal);
+            if (calculated > 0) {
+                document.getElementById('leaveDays').value = calculated;
+            }
+        }
     }
 
     function toggleLanguage() {
@@ -1188,11 +1214,16 @@
 
         const startRaw = document.getElementById('startDate').value;
         const endRaw = document.getElementById('endDate').value;
+        let daysInput = parseFloat(document.getElementById('leaveDays').value);
 
         if(!startRaw || !endRaw) { 
             playAudioNotification('error');
             alert("กรุณาระบุวันที่"); 
             return; 
+        }
+
+        if(isNaN(daysInput) || daysInput <= 0) {
+            daysInput = calculateDays(startRaw, endRaw);
         }
 
         let leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
@@ -1205,6 +1236,7 @@
                 leaves[idx].leaveType = document.getElementById('leaveType').value;
                 leaves[idx].startDate = parseDateToISO(startRaw);
                 leaves[idx].endDate = parseDateToISO(endRaw);
+                leaves[idx].customDays = daysInput;
                 leaves[idx].reason = document.getElementById('reason').value;
             }
             playAudioNotification('success');
@@ -1216,6 +1248,7 @@
                 leaveType: document.getElementById('leaveType').value,
                 startDate: parseDateToISO(startRaw),
                 endDate: parseDateToISO(endRaw),
+                customDays: daysInput,
                 reason: document.getElementById('reason').value,
                 status: 'pending'
             });
@@ -1241,6 +1274,7 @@
             startPicker.setDate(formatDateDisplay(leave.startDate));
             endPicker.setDate(formatDateDisplay(leave.endDate));
             
+            document.getElementById('leaveDays').value = leave.customDays || calculateDays(leave.startDate, leave.endDate);
             document.getElementById('reason').value = leave.reason;
 
             document.getElementById('editModeBadge').classList.remove('d-none');
@@ -1254,6 +1288,7 @@
     function cancelEditMode() {
         document.getElementById('leaveForm').reset();
         document.getElementById('editingLeaveId').value = '';
+        document.getElementById('leaveDays').value = '';
         startPicker.clear();
         endPicker.clear();
 
@@ -1297,7 +1332,7 @@
                 upcomingTbody.innerHTML = `<tr><td colspan="${colspanVal}" class="text-center text-muted p-4">${lang.noLeavesMsg}</td></tr>`;
             } else {
                 activeLeaves.forEach(leave => {
-                    const days = calculateDays(leave.startDate, leave.endDate);
+                    const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
                     
                     let statusBadge = (leave.status === 'approved') 
@@ -1354,7 +1389,7 @@
                     myHistoryTbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted p-4">${lang.noHistoryMsg}</td></tr>`;
                 } else {
                     myLeaves.forEach(leave => {
-                        const days = calculateDays(leave.startDate, leave.endDate);
+                        const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
 
                         if (leave.leaveType === 'sick') mySickDays += days;
                         if (leave.leaveType === 'personal') myPersonalDays += days;
@@ -1405,7 +1440,7 @@
             let sickCountDays = 0, personalCountDays = 0, vacCountDays = 0;
 
             filteredAdminLeaves.forEach(leave => {
-                const days = calculateDays(leave.startDate, leave.endDate);
+                const days = leave.customDays || calculateDays(leave.startDate, leave.endDate);
                 if(leave.leaveType === 'sick') sickCountDays += days;
                 if(leave.leaveType === 'personal') personalCountDays += days;
                 if(leave.leaveType === 'vacation') vacCountDays += days;
