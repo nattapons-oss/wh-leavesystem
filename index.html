@@ -180,7 +180,7 @@
                                 <th id="thUpType">ประเภท</th>
                                 <th id="thUpStart">เริ่มวันที่</th>
                                 <th id="thUpEnd">ถึงวันที่</th>
-                                <th id="thUpDays">จำนวน (วัน)</th>
+                                <th id="thUpDays" class="text-center">จำนวน (วัน)</th>
                                 <th id="thUpReason" class="admin-only">เหตุผล</th>
                                 <th id="thUpStatus">สถานะ</th>
                                 <th id="thUpAction" class="admin-only">จัดการ (Admin)</th>
@@ -302,7 +302,7 @@
                                 <th id="thMyType">ประเภท</th>
                                 <th id="thMyStart">เริ่มวันที่</th>
                                 <th id="thMyEnd">ถึงวันที่</th>
-                                <th id="thMyDays">จำนวน (วัน)</th>
+                                <th id="thMyDays" class="text-center">จำนวน (วัน)</th>
                                 <th id="thMyReason">เหตุผล</th>
                                 <th id="thMyStatus">สถานะ</th>
                                 <th id="thMyActions">จัดการ</th>
@@ -405,7 +405,7 @@
                                 <th id="thType">ประเภท</th>
                                 <th id="thStart">เริ่ม</th>
                                 <th id="thEnd">สิ้นสุด</th>
-                                <th id="thAmount">จำนวน</th>
+                                <th id="thAmount" class="text-center">จำนวน</th>
                                 <th id="thReason">เหตุผล</th>
                                 <th id="thStatus">สถานะ</th>
                                 <th id="thAction">จัดการ (Admin)</th>
@@ -1403,7 +1403,7 @@
                             <td>${typeBadge}</td>
                             <td>${formatDateDisplay(leave.startDate)}</td>
                             <td>${formatDateDisplay(leave.endDate)}</td>
-                            <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
+                            <td class="fw-bold text-primary text-center">${days} ${lang.txtDayUnit}</td>
                             ${reasonCell}
                             <td>${statusBadge}</td>
                             ${adminActionCell}
@@ -1457,7 +1457,7 @@
                                 <td>${typeBadge}</td>
                                 <td>${formatDateDisplay(leave.startDate)}</td>
                                 <td>${formatDateDisplay(leave.endDate)}</td>
-                                <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
+                                <td class="fw-bold text-primary text-center">${days} ${lang.txtDayUnit}</td>
                                 <td>${leave.reason}</td>
                                 <td>${statusBadge}</td>
                                 <td>
@@ -1511,7 +1511,7 @@
                         <td>${typeBadge}</td>
                         <td>${formatDateDisplay(leave.startDate)}</td>
                         <td>${formatDateDisplay(leave.endDate)}</td>
-                        <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
+                        <td class="fw-bold text-primary text-center">${days} ${lang.txtDayUnit}</td>
                         <td>${leave.reason}</td>
                         <td>${statusBadge}</td>
                         <td>
