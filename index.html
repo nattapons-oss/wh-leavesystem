@@ -521,6 +521,18 @@
         return str;
     }
 
+    // ฟังก์ชันสร้าง Badge สีของประเภทวันลา
+    function getLeaveTypeBadge(type, label) {
+        if (type === 'sick') {
+            return `<span class="badge bg-danger px-2 py-1"><i class="fa-solid fa-notes-medical me-1"></i>${label}</span>`;
+        } else if (type === 'personal') {
+            return `<span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-user-clock me-1"></i>${label}</span>`;
+        } else if (type === 'vacation') {
+            return `<span class="badge bg-success px-2 py-1"><i class="fa-solid fa-umbrella-beach me-1"></i>${label}</span>`;
+        }
+        return `<span class="badge bg-secondary px-2 py-1">${label}</span>`;
+    }
+
     function showSyncSpinner(show) {
         const spinner = document.getElementById('syncIndicator');
         if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
@@ -729,7 +741,6 @@
         return diffDays > 0 ? diffDays : 0;
     }
 
-    // ดึงค่าจำนวนวันลาที่แท้จริง โดยรองรับค่าทศนิยม (เช่น 0.5)
     function getLeaveDaysVal(leave) {
         if (leave.customDays !== undefined && leave.customDays !== null && leave.customDays !== '' && !isNaN(leave.customDays)) {
             return parseFloat(leave.customDays);
@@ -1360,6 +1371,7 @@
                 activeLeaves.forEach(leave => {
                     const days = getLeaveDaysVal(leave);
                     let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
+                    let typeBadge = getLeaveTypeBadge(leave.leaveType, typeLabel);
                     
                     let statusBadge = (leave.status === 'approved') 
                         ? `<span class="badge bg-success px-3 py-2">${lang.approvedStatus}</span>` 
@@ -1380,7 +1392,7 @@
                         <tr>
                             <td><img src="${empAvatar}" alt="${leave.empName}" class="table-avatar shadow-sm"></td>
                             <td class="fw-bold">${leave.empName}</td>
-                            <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
+                            <td>${typeBadge}</td>
                             <td>${formatDateDisplay(leave.startDate)}</td>
                             <td>${formatDateDisplay(leave.endDate)}</td>
                             <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
@@ -1426,13 +1438,14 @@
                         if (leave.leaveType === 'vacation') myVacationDays += days;
 
                         let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
+                        let typeBadge = getLeaveTypeBadge(leave.leaveType, typeLabel);
                         let statusBadge = (leave.status === 'approved') 
                             ? `<span class="badge bg-success px-2 py-1">${lang.approvedStatus}</span>` 
                             : `<span class="badge bg-warning text-dark px-2 py-1">${lang.pendingStatus}</span>`;
 
                         myHistoryTbody.innerHTML += `
                             <tr>
-                                <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
+                                <td>${typeBadge}</td>
                                 <td>${formatDateDisplay(leave.startDate)}</td>
                                 <td>${formatDateDisplay(leave.endDate)}</td>
                                 <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
@@ -1476,6 +1489,7 @@
                 if(leave.leaveType === 'vacation') vacCountDays += days;
 
                 let typeLabel = leave.leaveType === 'sick' ? lang.optSick : (leave.leaveType === 'vacation' ? lang.optVacation : lang.optPersonal);
+                let typeBadge = getLeaveTypeBadge(leave.leaveType, typeLabel);
                 let statusBadge = (leave.status === 'approved') 
                     ? `<span class="badge bg-success px-2 py-1">${lang.approvedStatus}</span>` 
                     : `<span class="badge bg-warning text-dark px-2 py-1">${lang.pendingStatus}</span>`;
@@ -1485,7 +1499,7 @@
                 leaveTbody.innerHTML += `
                     <tr>
                         <td class="fw-bold">${leave.empName}</td>
-                        <td><span class="badge bg-secondary px-2 py-1">${typeLabel}</span></td>
+                        <td>${typeBadge}</td>
                         <td>${formatDateDisplay(leave.startDate)}</td>
                         <td>${formatDateDisplay(leave.endDate)}</td>
                         <td class="fw-bold text-primary">${days} ${lang.txtDayUnit}</td>
