@@ -18,12 +18,12 @@
         .flatpickr-input[readonly] { background-color: #fff; }
 
         .brand-logo { max-width: 180px; height: auto; display: block; margin: 0 auto 10px auto; }
-        .nav-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+        .nav-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; cursor: pointer; }
         .table-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
-        .profile-avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #6366f1; margin: 0 auto 15px auto; display: block; }
+        .profile-avatar-preview { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #6366f1; margin: 0 auto 10px auto; display: block; }
         .form-user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6; margin: 0 auto 10px auto; display: block; }
         
-        /* ปรับขนาดรูปโปรไฟล์ที่หัวการ์ดตรงนี้ (จากเดิม 38px -> 56px) */
+        /* รูปโปรไฟล์ที่หัวการ์ด */
         .profile-header-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #7c3aed; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
 
         .card { border-radius: 15px; border: none; overflow: hidden; }
@@ -41,6 +41,9 @@
         .btn-lang:hover { background: rgba(255, 255, 255, 0.3); color: white; }
         
         .sync-spinner { display: none; width: 1rem; height: 1rem; border-width: 0.15em; }
+
+        /* ปรับสไตล์ Offcanvas โปรไฟล์ด้านขวา */
+        .offcanvas-profile { max-width: 360px; border-top-left-radius: 15px; border-bottom-left-radius: 15px; }
     </style>
 </head>
 <body>
@@ -134,9 +137,6 @@
                 <li class="nav-item">
                     <a class="nav-link" onclick="switchPage('mySummaryView')" id="menuMySummary">สรุปการลาของฉัน</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" onclick="switchPage('profileView')" id="menuProfile">แก้ไขโปรไฟล์</a>
-                </li>
                 <li class="nav-item admin-only">
                     <a class="nav-link" onclick="switchPage('dashboardView')" id="menuDashboard">แดชบอร์ด & ประวัติ</a>
                 </li>
@@ -147,15 +147,51 @@
             <div class="d-flex align-items-center gap-2">
                 <div id="syncIndicator" class="spinner-border text-light sync-spinner" role="status"></div>
                 <button class="btn btn-sm btn-outline-info text-white" onclick="fetchCloudData()"><i class="fa-solid fa-rotate"></i> ดึงข้อมูลใหม่</button>
-                <img id="navAvatar" src="" alt="Avatar" class="nav-avatar">
+                <img id="navAvatar" src="" alt="Avatar" class="nav-avatar" onclick="openProfileModal()" title="แก้ไขโปรไฟล์">
                 <span class="badge bg-warning text-dark px-3 py-2" id="userRoleBadge">User</span>
-                <span class="text-white small fw-bold" id="currentUserNameDisplay"></span>
+                <span class="text-white small fw-bold cursor-pointer" id="currentUserNameDisplay" onclick="openProfileModal()"></span>
                 <button class="btn btn-outline-light btn-sm ms-2 lang-btn-label" onclick="toggleLanguage()">TH/EN/MM</button>
                 <button class="btn btn-danger btn-sm" onclick="logout()" id="btnLogout">ออกจากระบบ</button>
             </div>
         </div>
     </div>
 </nav>
+
+<!-- Pop-up แก้ไขโปรไฟล์ (Offcanvas ขวามือ) -->
+<div class="offcanvas offcanvas-end offcanvas-profile" tabindex="-1" id="profileOffcanvas" aria-labelledby="profileOffcanvasLabel">
+    <div class="offcanvas-header card-header-profile text-white">
+        <h5 class="offcanvas-title fw-bold" id="profileTitle"><i class="fa-solid fa-user-gear me-2"></i>แก้ไขข้อมูลส่วนตัว</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+        <form id="profileForm">
+            <div class="text-center mb-3">
+                <img id="profAvatarPreview" src="" alt="Profile Preview" class="profile-avatar-preview shadow-sm">
+                <div>
+                    <label for="profImageInput" class="btn btn-outline-primary btn-sm rounded-pill" id="lblUploadImage">📷 อัปโหลดรูปโปรไฟล์</label>
+                    <input type="file" id="profImageInput" accept="image/*" class="d-none" onchange="previewProfileImage(event)">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary fw-semibold small" id="lblProfUsername">ชื่อผู้ใช้</label>
+                <input type="text" class="form-control bg-light form-control-sm" id="profUsername" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary fw-semibold small" id="lblProfFullName">ชื่อ-นามสกุล</label>
+                <input type="text" class="form-control form-control-sm" id="profFullName" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary fw-semibold small" id="lblProfPhone">เบอร์โทรศัพท์</label>
+                <input type="tel" class="form-control form-control-sm" id="profPhone" placeholder="เช่น 0812345678" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-secondary fw-semibold small" id="lblProfDept">แผนก</label>
+                <input type="text" class="form-control form-control-sm" id="profDept" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fs-6 shadow-sm" id="btnSaveProfile">บันทึกการแก้ไข</button>
+        </form>
+    </div>
+</div>
 
 <!-- 3. Main Content -->
 <div id="mainContent" class="container d-none">
@@ -315,42 +351,7 @@
         </div>
     </div>
 
-    <!-- 3.4 หน้าโปรไฟล์ -->
-    <div id="profileView" class="page-section">
-        <div class="card shadow-sm mx-auto" style="max-width: 600px;">
-            <div class="card-header card-header-profile p-3">
-                <h4 class="mb-0 fw-bold" id="profileTitle">แก้ไขข้อมูลส่วนตัว</h4>
-            </div>
-            <div class="card-body p-4">
-                <form id="profileForm">
-                    <div class="text-center mb-3">
-                        <img id="profAvatarPreview" src="" alt="Profile Preview" class="profile-avatar-preview">
-                        <label for="profImageInput" class="btn btn-outline-primary btn-sm rounded-pill" id="lblUploadImage">📷 อัปโหลดรูปโปรไฟล์</label>
-                        <input type="file" id="profImageInput" accept="image/*" class="d-none" onchange="previewProfileImage(event)">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary fw-semibold" id="lblProfUsername">ชื่อผู้ใช้</label>
-                        <input type="text" class="form-control bg-light" id="profUsername" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary fw-semibold" id="lblProfFullName">ชื่อ-นามสกุล</label>
-                        <input type="text" class="form-control" id="profFullName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-secondary fw-semibold" id="lblProfPhone">เบอร์โทรศัพท์</label>
-                        <input type="tel" class="form-control" id="profPhone" placeholder="เช่น 0812345678" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label text-secondary fw-semibold" id="lblProfDept">แผนก</label>
-                        <input type="text" class="form-control" id="profDept" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 btn-lg fs-6 shadow-sm" id="btnSaveProfile">บันทึกการแก้ไข</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3.5 หน้า Dashboard ภาพรวม Admin -->
+    <!-- 3.4 หน้า Dashboard ภาพรวม Admin -->
     <div id="dashboardView" class="page-section">
         <div class="card shadow-sm mb-4">
             <div class="card-header card-header-admin p-3">
@@ -418,7 +419,7 @@
         </div>
     </div>
 
-    <!-- 3.6 หน้าจัดการพนักงาน -->
+    <!-- 3.5 หน้าจัดการพนักงาน -->
     <div id="employeeView" class="page-section">
         <div class="row">
             <div class="col-md-4 mb-4">
@@ -479,6 +480,21 @@
 
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBoGBT35V9D3mchobSkVBqvuDT8KxQG9YjzcFaKT2rFguxCsxyH1l5RIRhtAWWDKlwaw/exec";
+
+    let profileOffcanvasInstance = null;
+
+    function openProfileModal() {
+        if (!profileOffcanvasInstance) {
+            profileOffcanvasInstance = new bootstrap.Offcanvas(document.getElementById('profileOffcanvas'));
+        }
+        profileOffcanvasInstance.show();
+    }
+
+    function closeProfileModal() {
+        if (profileOffcanvasInstance) {
+            profileOffcanvasInstance.hide();
+        }
+    }
 
     function formatPhoneNumber(phone) {
         if (!phone) return '-';
@@ -675,7 +691,7 @@
         th: {
             loginTitle: "เข้าสู่ระบบ", lblUsername: "ชื่อผู้ใช้", lblPassword: "รหัสผ่าน", btnLogin: "เข้าสู่ระบบ", txtNoAccount: "ยังไม่มีบัญชี?", linkGoRegister: "สมัครสมาชิก",
             regTitle: "สมัครสมาชิกพนักงาน", lblRegFullName: "ชื่อ-นามสกุล", lblRegPhone: "เบอร์โทรศัพท์", lblRegDept: "แผนก", lblRegUser: "ชื่อผู้ใช้", lblRegPass: "รหัสผ่าน", btnRegister: "ลงทะเบียน", txtHaveAccount: "มีบัญชีอยู่แล้ว?", linkGoLogin: "เข้าสู่ระบบ", btnLogout: "ออกจากระบบ",
-            navTitle: "ระบบลางาน WH Pantai", menuUpcoming: "Dashboard ลางาน", menuRequest: "ฟอร์มขอลางาน", menuMySummary: "สรุปการลาของฉัน", menuProfile: "แก้ไขโปรไฟล์", menuDashboard: "แดชบอร์ด & ประวัติ", menuEmployee: "จัดการพนักงาน",
+            navTitle: "ระบบลางาน WH Pantai", menuUpcoming: "Dashboard ลางาน", menuRequest: "ฟอร์มขอลางาน", menuMySummary: "สรุปการลาของฉัน", menuDashboard: "แดชบอร์ด & ประวัติ", menuEmployee: "จัดการพนักงาน",
             formTitle: "แบบฟอร์มขอลางาน - WH Pantai", lblSelectEmp: "ผู้ขอลางาน", lblLeaveType: "ประเภทการลา", optSick: "ลาป่วย", optPersonal: "ลากิจ", optVacation: "ลาพักร้อน",
             lblStartDate: "เริ่มวันที่", lblEndDate: "ถึงวันที่", lblLeaveDays: "จำนวนวันลา", lblReason: "เหตุผล", btnSubmit: "บันทึกการลา",
             mySummaryTitle: "สรุปสถิติการลาของฉัน", statMySick: "ลาป่วย", statMyPersonal: "ลากิจ", statMyVacation: "ลาพักร้อน",
@@ -692,7 +708,7 @@
         en: {
             loginTitle: "Login", lblUsername: "Username", lblPassword: "Password", btnLogin: "Login", txtNoAccount: "Don't have an account?", linkGoRegister: "Register",
             regTitle: "Employee Registration", lblRegFullName: "Full Name", lblRegPhone: "Phone Number", lblRegDept: "Department", lblRegUser: "Username", lblRegPass: "Password", btnRegister: "Sign Up", txtHaveAccount: "Already have an account?", linkGoLogin: "Login", btnLogout: "Logout",
-            navTitle: "WH Pantai Leave System", menuUpcoming: "Leave Dashboard", menuRequest: "Leave Form", menuMySummary: "My Summary", menuProfile: "Edit Profile", menuDashboard: "Dashboard & History", menuEmployee: "Employees",
+            navTitle: "WH Pantai Leave System", menuUpcoming: "Leave Dashboard", menuRequest: "Leave Form", menuMySummary: "My Summary", menuDashboard: "Dashboard & History", menuEmployee: "Employees",
             formTitle: "Leave Form - WH Pantai", lblSelectEmp: "Applicant Name", lblLeaveType: "Leave Type", optSick: "Sick Leave", optPersonal: "Personal Leave", optVacation: "Annual Leave",
             lblStartDate: "Start Date", lblEndDate: "End Date", lblLeaveDays: "Leave Days", lblReason: "Reason", btnSubmit: "Submit Leave",
             mySummaryTitle: "My Leave Summary", statMySick: "Sick Leave", statMyPersonal: "Personal Leave", statMyVacation: "Annual Leave",
@@ -709,7 +725,7 @@
         mm: {
             loginTitle: "အကောင့်ဝင်ရန်", lblUsername: "အသုံးပြုသူအမည်", lblPassword: "စကားဝှက်", btnLogin: "ဝင်ရောက်မည်", txtNoAccount: "အကောင့်မရှိသေးပါလား?", linkGoRegister: "အကောင့်ဖွင့်ရန်",
             regTitle: "ဝန်ထမ်းအကောင့်ဖွင့်ရန်", lblRegFullName: "အမည်အပြည့်အစုံ", lblRegPhone: "ဖုန်းနံပါတ်", lblRegDept: "ဌာန", lblRegUser: "အသုံးပြုသူအမည်", lblRegPass: "စကားဝှက်", btnRegister: "စာရင်းသွင်းမည်", txtHaveAccount: "အကောင့်ရှိပြီးသားလား?", linkGoLogin: "အကောင့်ဝင်ရန်", btnLogout: "ထွက်မည်",
-            navTitle: "WH Pantai ခွင့်ယူစနစ်", menuUpcoming: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", menuRequest: "ခွင့်တိုင်ကြားလွှာ", menuMySummary: "ကျွန်ုပ်၏ ခွင့်အကျဉ်း", menuProfile: "ပရိုဖိုင်ပြင်ရန်", menuDashboard: "ဒက်ရှ်ဘုတ်နှင့် မှတ်တမ်း", menuEmployee: "ဝန်ထမ်းများ စီမံရန်",
+            navTitle: "WH Pantai ခွင့်ယူစနစ်", menuUpcoming: "ခွင့်ယူမှု ဒက်ရှ်ဘုတ်", menuRequest: "ခွင့်တိုင်ကြားလွှာ", menuMySummary: "ကျွန်ုပ်၏ ခွင့်အကျဉ်း", menuDashboard: "ဒက်ရှ်ဘုတ်နှင့် မှတ်တမ်း", menuEmployee: "ဝန်ထမ်းများ စီမံရန်",
             formTitle: "ခွင့်တိုင်ကြားလွှာ - WH Pantai", lblSelectEmp: "ခွင့်တိုင်ကြားသူ", lblLeaveType: "ခွင့်အမျိုးအစား", optSick: "ဆေးခွင့်", optPersonal: "ရှောင်တခင်ခွင့်", optVacation: "လုပ်သက်ခွင့်",
             lblStartDate: "စတင်သည့်ရက်", lblEndDate: "ပြီးဆုံးသည့်ရက်", lblLeaveDays: "ခွင့်ရက်ပေါင်း", lblReason: "အကြောင်းပြချက်", btnSubmit: "ခွင့်တိုင်ကြားမည်",
             mySummaryTitle: "ကျွန်ုပ်၏ ခွင့်ယူမှု အကျဉ်းချုပ်", statMySick: "ဆေးခွင့်", statMyPersonal: "ရှောင်တခင်ခွင့်", statMyVacation: "လုပ်သက်ခွင့်",
@@ -1000,15 +1016,16 @@
         playAudioNotification('success');
         alert('อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว!');
         
+        closeProfileModal();
         loadEmployees();
         loadLeaves();
-        switchPage('mySummaryView');
     });
 
     function logout() {
         currentUser = null;
         tempAvatarBase64 = null;
         cancelEditMode();
+        closeProfileModal();
         document.getElementById('loginForm').reset();
         document.getElementById('registerForm').reset();
         document.getElementById('authContainer').classList.remove('d-none');
@@ -1037,7 +1054,6 @@
             document.getElementById('menuMySummary').classList.add('active');
             loadLeaves();
         }
-        if(pageId === 'profileView') document.getElementById('menuProfile').classList.add('active');
         if(pageId === 'dashboardView') document.getElementById('menuDashboard').classList.add('active');
         if(pageId === 'employeeView') document.getElementById('menuEmployee').classList.add('active');
     }
