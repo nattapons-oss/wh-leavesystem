@@ -469,7 +469,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec";
 
     function formatPhoneNumber(phone) {
         if (!phone) return '-';
@@ -527,7 +527,7 @@
     }
 
     async function syncToCloud() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec")) return;
         showSyncSpinner(true);
         try {
             const leaves = JSON.parse(localStorage.getItem('leaveData')) || [];
@@ -547,7 +547,7 @@
     }
 
     async function fetchCloudData() {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec")) return;
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyhIJhYDtLr8swwoEWkcDhr4haB-RogcyNVMyAJkJIhwsr9Tl67b5Z2wslG1meDXCnNJA/exec")) return;
         showSyncSpinner(true);
         try {
             const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitialData`);
