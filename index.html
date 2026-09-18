@@ -227,7 +227,6 @@
                             <label class="form-label text-secondary fw-semibold" id="lblEndDate">สิ้นสุด</label>
                             <input type="text" class="form-control datepicker" id="endDate" placeholder="วัน/เดือน/ปี" required>
                         </div>
-                        <!-- เพิ่มฟิลด์ จำนวนวันลา -->
                         <div class="col-md-3 mb-3">
                             <label class="form-label text-secondary fw-semibold" id="lblLeaveDays">จำนวนวันลา</label>
                             <input type="number" class="form-control" id="leaveDays" min="0.5" step="0.5" placeholder="จำนวนวัน" required>
@@ -470,9 +469,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    // ------------------------------------------------------------------
-    // ใส่ Web App URL ของคุณจาก Google Apps Script ในบรรทัดล่างนี้:
-    // ------------------------------------------------------------------
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjLnputIs20V9xKzV9gmOX5siITIdhRbLjOWV-PHIX5Lzdm3Gf3-DFeQcrQee_xAYDDw/exec";
 
     function formatPhoneNumber(phone) {
@@ -581,10 +577,19 @@
                 }
                 if (data.employees) {
                     const parsedEmps = data.employees.map(e => {
-                        if (typeof e.quota === 'string' && e.quota !== '') {
-                            try { e.quota = JSON.parse(e.quota); } catch(err){}
+                        // ปรับปรุงระบบตรวจสอบข้อมูล Quota ให้แปลงค่าจาก String เป็น Object เสมอ
+                        if (typeof e.quota === 'string' && e.quota.trim() !== '') {
+                            try { e.quota = JSON.parse(e.quota); } catch(err){ e.quota = null; }
                         }
-                        if (!e.quota) e.quota = { sick: 30, personal: 6, vacation: 7 };
+                        if (!e.quota || typeof e.quota !== 'object') {
+                            e.quota = { sick: 30, personal: 6, vacation: 7 };
+                        } else {
+                            e.quota = {
+                                sick: parseInt(e.quota.sick) || 0,
+                                personal: parseInt(e.quota.personal) || 0,
+                                vacation: parseInt(e.quota.vacation) || 0
+                            };
+                        }
                         e.phone = formatPhoneNumber(e.phone);
                         return e;
                     });
@@ -702,7 +707,6 @@
     let currentUser = null;
     let tempAvatarBase64 = null;
 
-    // Flatpickr พร้อมฟังก์ชันคำนวณจำนวนวันให้อัตโนมัติทันทีเมื่อเลือกวันที่
     let startPicker = flatpickr("#startDate", { 
         dateFormat: "d/m/Y", 
         allowInput: true,
@@ -723,7 +727,6 @@
         return diffDays > 0 ? diffDays : 0;
     }
 
-    // ฟังก์ชันช่วยคำนวณจำนวนวันลาอัตโนมัติแล้วเติมในช่อง Leave Days
     function autoCalculateLeaveDays() {
         const startVal = document.getElementById('startDate').value;
         const endVal = document.getElementById('endDate').value;
@@ -1087,7 +1090,8 @@
         }
     }
 
-    function editEmployeeQuota(empId) {
+    // ปรับแก้การแก้ไขโควต้าให้ทำงานได้อย่างถูกต้อง และซิงค์ขึ้น Cloud ทันที
+    async function editEmployeeQuota(empId) {
         if (!currentUser || currentUser.role !== 'admin') {
             playAudioNotification('error');
             alert('เฉพาะ Admin เท่านั้น / Admin only');
@@ -1098,7 +1102,14 @@
         let emp = emps.find(e => e.id === empId);
 
         if (emp) {
-            const currentQ = emp.quota || { sick: 30, personal: 6, vacation: 7 };
+            let currentQ = emp.quota;
+            if (typeof currentQ === 'string') {
+                try { currentQ = JSON.parse(currentQ); } catch(err) { currentQ = null; }
+            }
+            if (!currentQ || typeof currentQ !== 'object') {
+                currentQ = { sick: 30, personal: 6, vacation: 7 };
+            }
+
             const sickStr = prompt(`กำหนดโควต้า "ลาป่วย" (วัน/ปี) สำหรับ ${emp.name}:`, currentQ.sick);
             if (sickStr === null) return;
 
@@ -1115,11 +1126,12 @@
             };
 
             localStorage.setItem('employees', JSON.stringify(emps));
-            syncToCloud();
-            playAudioNotification('success');
-            alert(`บันทึกโควต้าวันลาของ ${emp.name} เรียบร้อยแล้ว!`);
             loadEmployees();
             loadLeaves();
+
+            await syncToCloud();
+            playAudioNotification('success');
+            alert(`บันทึกโควต้าวันลาของ ${emp.name} เรียบร้อยแล้ว!`);
         }
     }
 
@@ -1157,7 +1169,12 @@
                 let roleHtml = '<span class="badge bg-secondary">User</span>';
                 let actionBtnsHtml = '';
 
-                const q = emp.quota || { sick: 30, personal: 6, vacation: 7 };
+                let q = emp.quota;
+                if (typeof q === 'string') {
+                    try { q = JSON.parse(q); } catch(err){ q = null; }
+                }
+                if (!q || typeof q !== 'object') q = { sick: 30, personal: 6, vacation: 7 };
+
                 let quotaDisplay = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">ป่วย ${q.sick}</span> ` +
                                    `<span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-1">กิจ ${q.personal}</span> ` +
                                    `<span class="badge bg-success-subtle text-success border border-success-subtle ms-1">พักร้อน ${q.vacation}</span>`;
@@ -1372,7 +1389,11 @@
             document.getElementById('mySummaryUserDisplay').innerText = currentUser.fullName;
             
             const myEmp = emps.find(e => String(e.name || '').trim() === String(currentUser.fullName || '').trim());
-            const userQuota = (myEmp && myEmp.quota) ? myEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+            
+            let userQuota = (myEmp && myEmp.quota) ? myEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+            if (typeof userQuota === 'string') {
+                try { userQuota = JSON.parse(userQuota); } catch(err){ userQuota = { sick: 30, personal: 6, vacation: 7 }; }
+            }
 
             const myLeaves = leaves.filter(l => {
                 const isoStart = parseDateToISO(l.startDate);
@@ -1473,7 +1494,10 @@
 
             if (selectedEmpFilter !== 'ALL') {
                 const targetEmp = emps.find(e => e.name === selectedEmpFilter);
-                const targetQ = (targetEmp && targetEmp.quota) ? targetEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+                let targetQ = (targetEmp && targetEmp.quota) ? targetEmp.quota : { sick: 30, personal: 6, vacation: 7 };
+                if (typeof targetQ === 'string') {
+                    try { targetQ = JSON.parse(targetQ); } catch(err){ targetQ = { sick: 30, personal: 6, vacation: 7 }; }
+                }
                 
                 document.getElementById('countSick').innerText = `${sickCountDays} / ${targetQ.sick}`;
                 document.getElementById('countPersonal').innerText = `${personalCountDays} / ${targetQ.personal}`;
