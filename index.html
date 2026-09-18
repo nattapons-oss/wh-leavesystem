@@ -22,6 +22,9 @@
         .table-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; }
         .profile-avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #6366f1; margin: 0 auto 15px auto; display: block; }
         .form-user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6; margin: 0 auto 10px auto; display: block; }
+        
+        /* ปรับขนาดรูปโปรไฟล์ที่หัวการ์ดตรงนี้ (จากเดิม 38px -> 56px) */
+        .profile-header-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #7c3aed; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
 
         .card { border-radius: 15px; border: none; overflow: hidden; }
         .card-header-dashboard { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; }
@@ -252,14 +255,20 @@
             <div class="card-header card-header-summary p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h4 class="mb-0 fw-bold" id="mySummaryTitle">สรุปสถิติการลาของฉัน</h4>
-                    <div class="d-flex align-items-center gap-2">
-                        <label class="text-white fw-bold me-1 mb-0" id="lblYearText"><i class="fa-solid fa-calendar-days"></i> ปี:</label>
-                        <select id="userYearSelect" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="width: 120px;" onchange="loadLeaves()">
-                            <option value="2026" selected>2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                        </select>
-                        <span class="fs-6 fw-bold bg-white text-dark px-3 py-1 rounded-3 shadow-sm" id="mySummaryUserDisplay"></span>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="text-white fw-bold me-1 mb-0" id="lblYearText"><i class="fa-solid fa-calendar-days"></i> ปี:</label>
+                            <select id="userYearSelect" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="width: 100px;" onchange="loadLeaves()">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+                        <!-- แถบแสดงรูปใหญ่ขึ้นพร้อมชื่อผู้ใช้ -->
+                        <div class="d-flex align-items-center gap-2 bg-white text-dark px-3 py-1-5 rounded-pill shadow-sm">
+                            <img id="mySummaryUserAvatar" src="" alt="Avatar" class="profile-header-avatar">
+                            <span class="fs-5 fw-bold text-purple px-1" id="mySummaryUserDisplay"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -521,7 +530,6 @@
         return str;
     }
 
-    // ฟังก์ชันสร้าง Badge สีของประเภทวันลา
     function getLeaveTypeBadge(type, label) {
         if (type === 'sick') {
             return `<span class="badge bg-danger px-2 py-1"><i class="fa-solid fa-notes-medical me-1"></i>${label}</span>`;
@@ -673,7 +681,7 @@
             mySummaryTitle: "สรุปสถิติการลาของฉัน", statMySick: "ลาป่วย", statMyPersonal: "ลากิจ", statMyVacation: "ลาพักร้อน",
             myHistoryTitle: "ประวัติการลาของคุณ", thMyType: "ประเภท", thMyStart: "เริ่มวันที่", thMyEnd: "ถึงวันที่", thMyDays: "จำนวน (วัน)", thMyReason: "เหตุผล", thMyStatus: "สถานะ", thMyActions: "จัดการ",
             profileTitle: "แก้ไขข้อมูลส่วนตัว", lblProfUsername: "ชื่อผู้ใช้", lblProfFullName: "ชื่อ-นามสกุล", lblProfPhone: "เบอร์โทรศัพท์", lblProfDept: "แผนก", btnSaveProfile: "บันทึกการแก้ไข", lblUploadImage: "📷 อัปโหลดรูปโปรไฟล์",
-            upcomingTitle: "Dashboard ลางาน", upcomingDesc: "* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดหรือกำลังอยู่ในช่วงลา",
+            upcomingTitle: "Dashboard ลางาน", upcomingDesc: "* แสดงเฉพาะรายการที่ยังไม่ถึงกำหนดหรือกำลังอยู่ในช่วงลาเท่านั้น",
             thUpImg: "รูป", thUpName: "พนักงาน", thUpType: "ประเภท", thUpStart: "เริ่มวันที่", thUpEnd: "ถึงวันที่", thUpDays: "จำนวน (วัน)", thUpReason: "เหตุผล", thUpStatus: "สถานะ", thUpAction: "จัดการ (Admin)",
             dashTitle: "แดชบอร์ดภาพรวม (WH Pantai)", statTotalLeaves: "การลาทั้งหมด", statSickLeaves: "ลาป่วยรวม", statVacation: "ลาพักร้อนรวม",
             tableTitle: "ประวัติการลาทั้งหมด", thName: "พนักงาน", thType: "ประเภท", thStart: "เริ่ม", thEnd: "สิ้นสุด", thAmount: "จำนวน", thReason: "เหตุผล", thStatus: "สถานะ", thAction: "จัดการ (Admin)",
@@ -1408,6 +1416,7 @@
         if (currentUser) {
             const selectedUserYear = document.getElementById('userYearSelect').value;
             document.getElementById('mySummaryUserDisplay').innerText = currentUser.fullName;
+            document.getElementById('mySummaryUserAvatar').src = currentUser.avatar || defaultAvatar;
             
             const myEmp = emps.find(e => String(e.name || '').trim() === String(currentUser.fullName || '').trim());
             
